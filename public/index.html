@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stickly - Share Your Thoughts Anonymously</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Custom Cursor -->
+    <div class="cursor-dot"></div>
+    <div class="cursor-shadow"></div>
+    
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="logo">💬</span>
+            <div>
+                <h1>Stickly</h1>
+                <p class="tagline">Your secrets are safe here</p>
+            </div>
+        </div>
+        <div class="nav-links">
+            <button class="nav-btn active" data-section="all" onclick="switchSection('all')">All</button>
+            <button class="nav-btn" data-section="inspiration" onclick="switchSection('inspiration')">Inspiration</button>
+            <button class="nav-btn" data-section="knowledge" onclick="switchSection('knowledge')">Knowledge</button>
+            <button class="nav-btn" data-section="thoughts" onclick="switchSection('thoughts')">Thoughts</button>
+            <button class="nav-btn" data-section="confessions" onclick="switchSection('confessions')">Confessions</button>
+        </div>
+        <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle dark mode">
+            <span id="darkModeIcon">🌙</span>
+        </button>
+    </nav>
+
+    <!-- Floating Action Button -->
+    <button class="fab" onclick="toggleModal()">
+        <span class="fab-icon">+</span>
+        <span class="fab-label">Post</span>
+    </button>
+
+    <!-- Post Message Modal -->
+    <div id="postModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Share a Message</h2>
+                <button class="close-btn" onclick="toggleModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="category-selector">
+                    <label>Choose a category:</label>
+                    <div class="category-buttons">
+                        <button class="category-btn" data-category="inspiration" onclick="selectCategory('inspiration')">
+                            <span class="emoji">✨</span>
+                            <span>Inspiration</span>
+                        </button>
+                        <button class="category-btn" data-category="knowledge" onclick="selectCategory('knowledge')">
+                            <span class="emoji">📚</span>
+                            <span>Knowledge</span>
+                        </button>
+                        <button class="category-btn active" data-category="thoughts" onclick="selectCategory('thoughts')">
+                            <span class="emoji">💭</span>
+                            <span>Thoughts</span>
+                        </button>
+                        <button class="category-btn" data-category="confessions" onclick="selectCategory('confessions')">
+                            <span class="emoji">🤫</span>
+                            <span>Confessions</span>
+                        </button>
+                    </div>
+                </div>
+                <textarea 
+                    id="messageInput" 
+                    placeholder="What's on your mind?"
+                    maxlength="500"
+                ></textarea>
+                <div class="form-footer">
+                    <span class="char-count">0/500</span>
+                    <button class="post-btn" onclick="postMessage()">Post</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages Container -->
+    <div class="main-container">
+        <div class="section-header">
+            <h2 id="sectionTitle">All Messages</h2>
+            <p id="sectionSubtitle">Anonymous messages from around the world</p>
+        </div>
+        <div id="messagesList"></div>
+        <div class="bottom-quote">
+            <p id="bottomQuoteText"></p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Made with racism by Atharv & Ankit</p>
+    </footer>
+
+    <script>
+        let currentSection = 'all';
+        let selectedCategory = 'thoughts';
+
+        // Section-specific quotes
+        const sectionQuotes = {
+            'all': [
+                "Every voice matters, every story counts.",
+                "Anonymous thoughts, universal truths.",
+                "Share freely, connect deeply.",
+                "Your words, your world, your way."
+            ],
+            'inspiration': [
+                "Be yourself; everyone else is already taken. - Oscar Wilde",
+                "The only way to do great work is to love what you do. - Steve Jobs",
+                "Believe you can and you're halfway there. - Theodore Roosevelt",
+                "The future belongs to those who believe in the beauty of their dreams. - Eleanor Roosevelt",
+                "What we think, we become. - Buddha",
+                "Act as if what you do makes a difference. It does. - William James"
+            ],
+            'knowledge': [
+                "Knowledge is power. - Francis Bacon",
+                "The more you know, the more you realize you don't know. - Aristotle",
+                "An investment in knowledge pays the best interest. - Benjamin Franklin",
+                "Education is the most powerful weapon which you can use to change the world. - Nelson Mandela",
+                "The beautiful thing about learning is that nobody can take it away from you. - B.B. King",
+                "Live as if you were to die tomorrow. Learn as if you were to live forever. - Mahatma Gandhi"
+            ],
+            'thoughts': [
+                "A penny for your thoughts.",
+                "Think deeply, share freely.",
+                "Your thoughts shape your reality.",
+                "Random thoughts, profound connections.",
+                "What's on your mind matters."
+            ],
+            'confessions': [
+                "The truth will set you free.",
+                "Sometimes the bravest thing you can do is be honest.",
+                "Your secrets are safe here.",
+                "Confession is good for the soul.",
+                "Anonymous honesty, genuine healing."
+            ]
+        };
+
+        // Load messages when page loads
+        window.onload = () => {
+            loadMessages();
+            updateCharCount();
+            initDarkMode();
+            updateBottomQuote();
+            initFAB();
+        };
+
+        // FAB collapse functionality
+        function initFAB() {
+            const fab = document.querySelector('.fab');
+            let timeout;
+
+            // Auto-collapse after 3 seconds
+            timeout = setTimeout(() => {
+                fab.classList.add('collapsed');
+            }, 3000);
+
+            // Expand on hover
+            fab.addEventListener('mouseenter', () => {
+                clearTimeout(timeout);
+                fab.classList.remove('collapsed');
+            });
+
+            // Collapse after leaving
+            fab.addEventListener('mouseleave', () => {
+                timeout = setTimeout(() => {
+                    fab.classList.add('collapsed');
+                }, 1000);
+            });
+        }
+
+        // Update bottom quote based on section
+        function updateBottomQuote() {
+            const quotes = sectionQuotes[currentSection] || sectionQuotes['all'];
+            const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+            document.getElementById('bottomQuoteText').textContent = randomQuote;
+        }
+
+        // Dark mode functionality
+        function initDarkMode() {
+            const darkMode = localStorage.getItem('darkMode') === 'true';
+            if (darkMode) {
+                document.body.classList.add('dark-mode');
+                document.getElementById('darkModeIcon').textContent = '☀️';
+            }
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark);
+            document.getElementById('darkModeIcon').textContent = isDark ? '☀️' : '🌙';
+        }
+
+        // Update character count
+        const messageInput = document.getElementById('messageInput');
+        messageInput.addEventListener('input', updateCharCount);
+
+        function updateCharCount() {
+            const count = messageInput.value.length;
+            document.querySelector('.char-count').textContent = `${count}/500`;
+        }
+
+        // Switch section
+        function switchSection(section) {
+            currentSection = section;
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.section === section);
+            });
+
+            const titles = {
+                'all': { title: 'All Messages', subtitle: 'Anonymous messages from around the world' },
+                'inspiration': { title: 'Inspiration', subtitle: 'Find a spark of motivation' },
+                'knowledge': { title: 'Knowledge', subtitle: 'Learn something new today' },
+                'thoughts': { title: 'Thoughts', subtitle: 'Random thoughts and musings' },
+                'confessions': { title: 'Confessions', subtitle: 'Anonymous secrets and stories' }
+            };
+
+            document.getElementById('sectionTitle').textContent = titles[section].title;
+            document.getElementById('sectionSubtitle').textContent = titles[section].subtitle;
+
+            updateBottomQuote();
+            loadMessages();
+        }
+
+        // Toggle modal
+        function toggleModal() {
+            const modal = document.getElementById('postModal');
+            modal.classList.toggle('show');
+        }
+
+        // Select category
+        function selectCategory(category) {
+            selectedCategory = category;
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.category === category);
+            });
+        }
+
+        // Load messages
+        async function loadMessages() {
+            try {
+                const url = currentSection === 'all' 
+                    ? '/api/messages' 
+                    : `/api/messages?category=${currentSection}`;
+                
+                const response = await fetch(url);
+                const messages = await response.json();
+                displayMessages(messages);
+            } catch (error) {
+                console.error('Error loading messages:', error);
+            }
+        }
+
+        // Post a new message
+        async function postMessage() {
+            const messageText = messageInput.value.trim();
+            const modalContent = document.querySelector('.modal-content');
+            
+            if (!messageText) {
+                modalContent.classList.add('shake');
+                setTimeout(() => modalContent.classList.remove('shake'), 400);
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        message: messageText,
+                        category: selectedCategory
+                    })
+                });
+
+                if (response.ok) {
+                    messageInput.value = '';
+                    updateCharCount();
+                    toggleModal();
+                    createConfetti();
+                    loadMessages();
+                } else {
+                    alert('Error posting message. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error posting message:', error);
+                alert('Error posting message. Please try again.');
+            }
+        }
+
+        // Display messages as cards
+        function displayMessages(messages) {
+            const messagesList = document.getElementById('messagesList');
+            
+            if (messages.length === 0) {
+                messagesList.innerHTML = '<div class="no-messages">No messages in this category yet. Be the first to share!</div>';
+                return;
+            }
+
+            const containerWidth = messagesList.offsetWidth || 1200;
+            const cardWidth = 300;
+            const gap = 40;
+            const cardsPerRow = Math.floor(containerWidth / (cardWidth + gap));
+
+            const categoryEmojis = {
+                'inspiration': '✨',
+                'knowledge': '📚',
+                'thoughts': '💭',
+                'confessions': '🤫'
+            };
+
+            const fragment = document.createDocumentFragment();
+            const totalRows = Math.ceil(messages.length / cardsPerRow);
+
+            messages.forEach((msg, index) => {
+                const timeAgo = getTimeAgo(new Date(msg.timestamp));
+                const row = Math.floor(index / cardsPerRow);
+                const col = index % cardsPerRow;
+                const left = col * (cardWidth + gap);
+                const top = row * (cardWidth + gap);
+
+                const card = document.createElement('div');
+                card.className = 'message-card';
+                card.setAttribute('data-category', msg.category);
+                card.style.cssText = `left: ${left}px; top: ${top}px; animation-delay: ${index * 0.05}s; width: ${cardWidth}px;`;
+                
+                card.innerHTML = `
+                    <div class="message-header">
+                        <span class="category-badge">${categoryEmojis[msg.category]} ${msg.category}</span>
+                        <span class="message-time">${timeAgo}</span>
+                    </div>
+                    <p class="message-text">${escapeHtml(msg.text)}</p>
+                `;
+                
+                fragment.appendChild(card);
+            });
+
+            messagesList.innerHTML = '';
+            messagesList.appendChild(fragment);
+            messagesList.style.minHeight = (totalRows * (cardWidth + gap)) + 'px';
+
+            // Add effects
+            addTiltEffect();
+            document.querySelectorAll('.message-card').forEach(makeDraggable);
+        }
+
+        // Confetti animation
+        function createConfetti() {
+            const colors = ['#FF6B6B', '#4ECDC4', '#95E1D3', '#F38181', '#FFD93D', '#6BCF7F'];
+            const confettiCount = 50;
+            
+            for (let i = 0; i < confettiCount; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.width = (Math.random() * 10 + 5) + 'px';
+                    confetti.style.height = (Math.random() * 10 + 5) + 'px';
+                    confetti.style.opacity = '1';
+                    confetti.style.animation = `confetti-fall ${Math.random() * 2 + 2}s linear forwards`;
+                    
+                    document.body.appendChild(confetti);
+                    
+                    setTimeout(() => confetti.remove(), 4000);
+                }, i * 30);
+            }
+        }
+
+        // 3D tilt effect on hover
+        function addTiltEffect() {
+            const cards = document.querySelectorAll('.message-card');
+            
+            cards.forEach(card => {
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    
+                    const rotateX = (y - centerY) / 10;
+                    const rotateY = (centerX - x) / 10;
+                    
+                    card.style.setProperty('--rotate-x', `${rotateX}deg`);
+                    card.style.setProperty('--rotate-y', `${rotateY}deg`);
+                });
+                
+                card.addEventListener('mouseleave', () => {
+                    card.style.setProperty('--rotate-x', '0deg');
+                    card.style.setProperty('--rotate-y', '0deg');
+                });
+            });
+        }
+
+        // Calculate time ago
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            if (seconds < 60) return 'just now';
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes}m ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours}h ago`;
+            const days = Math.floor(hours / 24);
+            return `${days}d ago`;
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Close modal when clicking outside
+        window.onclick = (event) => {
+            const modal = document.getElementById('postModal');
+            if (event.target === modal) {
+                toggleModal();
+            }
+        };
+
+        // Allow posting with Ctrl+Enter
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                e.preventDefault();
+                postMessage();
+            }
+        });
+
+        // Custom Cursor (optimized with RAF)
+        const cursorDot = document.querySelector('.cursor-dot');
+        let mouseX = 0, mouseY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            cursorDot.style.left = mouseX + 'px';
+            cursorDot.style.top = mouseY + 'px';
+        });
+
+        // Draggable message cards (optimized)
+        let isDragging = false;
+        let draggedCard = null;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        function makeDraggable(card) {
+            card.addEventListener('mousedown', startDrag);
+        }
+
+        function startDrag(e) {
+            if (e.target.tagName === 'A' || e.target.closest('a')) return;
+            
+            isDragging = true;
+            draggedCard = e.currentTarget;
+            draggedCard.classList.add('dragging');
+            
+            const rect = draggedCard.getBoundingClientRect();
+            const container = document.getElementById('messagesList').getBoundingClientRect();
+            
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+            
+            e.preventDefault();
+        }
+
+        function onMouseMove(e) {
+            if (!isDragging || !draggedCard) return;
+            
+            const container = document.getElementById('messagesList');
+            const containerRect = container.getBoundingClientRect();
+            
+            let newX = e.clientX - containerRect.left - offsetX;
+            let newY = e.clientY - containerRect.top - offsetY;
+            
+            // Keep within container bounds
+            newX = Math.max(0, Math.min(newX, containerRect.width - draggedCard.offsetWidth));
+            newY = Math.max(0, Math.min(newY, containerRect.height - draggedCard.offsetHeight));
+            
+            draggedCard.style.left = newX + 'px';
+            draggedCard.style.top = newY + 'px';
+        }
+
+        function onMouseUp() {
+            if (isDragging && draggedCard) {
+                draggedCard.classList.remove('dragging');
+                isDragging = false;
+                draggedCard = null;
+            }
+        }
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    </script>
+</body>
+</html>

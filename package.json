@@ -1,0 +1,16 @@
+{
+  "name": "anonymous-message-board",
+  "version": "1.0.0",
+  "description": "A simple anonymous message board",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["anonymous", "message-board", "nodejs"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
