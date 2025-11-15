@@ -797,14 +797,24 @@ body.dark-mode .message-card:hover::before {
         justify-content: center;
     }
 
+    .tagline {
+        font-size: 0.7rem;
+    }
+
     .nav-links {
         width: 100%;
         justify-content: center;
+        gap: 0.3rem;
     }
 
     .nav-btn {
-        padding: 0.5rem 0.8rem;
-        font-size: 0.8rem;
+        padding: 0.5rem 0.6rem;
+        font-size: 0.75rem;
+    }
+
+    .dark-mode-toggle {
+        padding: 0.4rem 0.8rem;
+        font-size: 1rem;
     }
 
     .section-header h2 {
@@ -832,6 +842,18 @@ body.dark-mode .message-card:hover::before {
         left: 0 !important;
         top: 0 !important;
         margin-bottom: 1.5rem;
+        cursor: auto;
+    }
+
+    .message-card:hover {
+        transform: none;
+    }
+
+    .delete-btn {
+        opacity: 1;
+        width: 28px;
+        height: 28px;
+        font-size: 1.4rem;
     }
 
     .fab {
@@ -842,6 +864,15 @@ body.dark-mode .message-card:hover::before {
         font-size: 1.2rem;
         width: 48px;
         border-radius: 50%;
+        transform: none;
+    }
+
+    .fab:hover {
+        transform: scale(1.05);
+    }
+
+    .fab:active {
+        transform: scale(0.95);
     }
 
     .fab-label {
@@ -849,10 +880,10 @@ body.dark-mode .message-card:hover::before {
     }
 
     .footer {
-        bottom: 1rem;
+        bottom: 5rem;
         right: 1rem;
         padding: 0.75rem 1rem;
-        font-size: 0.75rem;
+        font-size: 0.7rem;
     }
 
     .bottom-quote {
@@ -869,7 +900,59 @@ body.dark-mode .message-card:hover::before {
         border-radius: 12px;
     }
 
+    .modal-header h2 {
+        font-size: 1.3rem;
+    }
+
     .category-buttons {
         grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    .category-btn {
+        padding: 0.8rem;
+    }
+
+    .category-btn .emoji {
+        font-size: 1.3rem;
+    }
+
+    .category-btn span:last-child {
+        font-size: 0.8rem;
+    }
+
+    #messageInput {
+        min-height: 120px;
+        font-size: 0.95rem;
+    }
+
+    .form-footer {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: stretch;
+    }
+
+    .post-btn {
+        width: 100%;
+        padding: 0.9rem;
+    }
+
+    .message-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .message-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .message-text {
+        font-size: 0.95rem;
+    }
+
+    .confetti {
+        display: none;
     }
 }
