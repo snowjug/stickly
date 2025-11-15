@@ -235,4 +235,4 @@ Made with racism by **Atharv & Ankit**
 
 ---
 
-**Built with Node.js & Express | Designed for anonymous expression**
+**Built by Atharv and Ankit with Node.js & Express | Designed for anonymous expression**
