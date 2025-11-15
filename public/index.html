@@ -335,7 +335,10 @@
                 card.innerHTML = `
                     <div class="message-header">
                         <span class="category-badge">${categoryEmojis[msg.category]} ${msg.category}</span>
-                        <span class="message-time">${timeAgo}</span>
+                        <div class="message-actions">
+                            <span class="message-time">${timeAgo}</span>
+                            <button class="delete-btn" onclick="deleteMessage(${msg.id})" title="Delete message">×</button>
+                        </div>
                     </div>
                     <p class="message-text">${escapeHtml(msg.text)}</p>
                 `;
@@ -436,6 +439,26 @@
                 postMessage();
             }
         });
+
+        // Delete message
+        async function deleteMessage(messageId) {
+            if (!confirm('Delete this message?')) return;
+            
+            try {
+                const response = await fetch(`/api/messages/${messageId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    loadMessages();
+                } else {
+                    alert('Error deleting message. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error deleting message:', error);
+                alert('Error deleting message. Please try again.');
+            }
+        }
 
         // Custom Cursor (optimized with RAF)
         const cursorDot = document.querySelector('.cursor-dot');

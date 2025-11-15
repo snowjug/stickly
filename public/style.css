@@ -696,6 +696,45 @@ body.dark-mode .message-card:hover::before {
     gap: 0.5rem;
 }
 
+.message-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.delete-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--subtle-text-color);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    opacity: 0;
+    padding: 0;
+}
+
+.message-card:hover .delete-btn {
+    opacity: 1;
+}
+
+.delete-btn:hover {
+    background: #ff4444;
+    border-color: #ff4444;
+    color: white;
+    transform: scale(1.1);
+}
+
+.delete-btn:active {
+    transform: scale(0.95);
+}
+
 .category-badge {
     background: var(--background-color);
     padding: 0.3rem 0.8rem;
