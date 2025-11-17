@@ -30,6 +30,9 @@
         <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle dark mode">
             <span id="darkModeIcon">🌙</span>
         </button>
+        <button class="admin-toggle" id="adminBtn" onclick="toggleAdminModal()" title="Admin login">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </button>
     </nav>
 
     <!-- Floating Action Button -->
@@ -72,9 +75,55 @@
                     placeholder="What's on your mind?"
                     maxlength="500"
                 ></textarea>
+                <div class="image-upload-section">
+                    <label for="imageUpload" class="image-upload-label">
+                        <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                        </svg>
+                        <span class="upload-text">Attach Image or GIF</span>
+                    </label>
+                    <input 
+                        type="file" 
+                        id="imageUpload" 
+                        accept="image/jpeg,image/jpg,image/gif,image/png"
+                        style="display: none;"
+                    />
+                    <div id="imagePreview" class="image-preview"></div>
+                </div>
                 <div class="form-footer">
                     <span class="char-count">0/500</span>
                     <button class="post-btn" onclick="postMessage()">Post</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Login Modal -->
+    <div id="adminModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2 id="adminModalTitle">Admin Login</h2>
+                <button class="close-btn" onclick="toggleAdminModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="adminLoginForm">
+                    <input 
+                        type="text" 
+                        id="adminUsername" 
+                        placeholder="Username"
+                        class="admin-input"
+                    />
+                    <input 
+                        type="password" 
+                        id="adminPassword" 
+                        placeholder="Password"
+                        class="admin-input"
+                    />
+                    <button class="post-btn" onclick="adminLogin()" style="width: 100%; margin-top: 1rem;">Login</button>
+                </div>
+                <div id="adminPanel" style="display: none;">
+                    <p style="text-align: center; color: var(--text-color); margin-bottom: 1rem;">✅ Logged in as Admin</p>
+                    <button class="post-btn" onclick="adminLogout()" style="width: 100%; background: #ff4444;">Logout</button>
                 </div>
             </div>
         </div>
@@ -87,9 +136,12 @@
             <p id="sectionSubtitle">Anonymous messages from around the world</p>
         </div>
         <div id="messagesList"></div>
-        <div class="bottom-quote">
-            <p id="bottomQuoteText"></p>
-        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div class="image-modal" id="imageModal" onclick="closeImageModal()">
+        <span class="image-modal-close">&times;</span>
+        <img id="modalImage" src="" alt="Full size image">
     </div>
 
     <!-- Footer -->
@@ -100,54 +152,140 @@
     <script>
         let currentSection = 'all';
         let selectedCategory = 'thoughts';
+        let adminSessionId = localStorage.getItem('adminSessionId') || null;
 
-        // Section-specific quotes
-        const sectionQuotes = {
-            'all': [
-                "Every voice matters, every story counts.",
-                "Anonymous thoughts, universal truths.",
-                "Share freely, connect deeply.",
-                "Your words, your world, your way."
-            ],
-            'inspiration': [
-                "Be yourself; everyone else is already taken. - Oscar Wilde",
-                "The only way to do great work is to love what you do. - Steve Jobs",
-                "Believe you can and you're halfway there. - Theodore Roosevelt",
-                "The future belongs to those who believe in the beauty of their dreams. - Eleanor Roosevelt",
-                "What we think, we become. - Buddha",
-                "Act as if what you do makes a difference. It does. - William James"
-            ],
-            'knowledge': [
-                "Knowledge is power. - Francis Bacon",
-                "The more you know, the more you realize you don't know. - Aristotle",
-                "An investment in knowledge pays the best interest. - Benjamin Franklin",
-                "Education is the most powerful weapon which you can use to change the world. - Nelson Mandela",
-                "The beautiful thing about learning is that nobody can take it away from you. - B.B. King",
-                "Live as if you were to die tomorrow. Learn as if you were to live forever. - Mahatma Gandhi"
-            ],
-            'thoughts': [
-                "A penny for your thoughts.",
-                "Think deeply, share freely.",
-                "Your thoughts shape your reality.",
-                "Random thoughts, profound connections.",
-                "What's on your mind matters."
-            ],
-            'confessions': [
-                "The truth will set you free.",
-                "Sometimes the bravest thing you can do is be honest.",
-                "Your secrets are safe here.",
-                "Confession is good for the soul.",
-                "Anonymous honesty, genuine healing."
-            ]
-        };
+        // Admin functions
+        function toggleAdminModal() {
+            const modal = document.getElementById('adminModal');
+            modal.classList.toggle('show');
+            checkAdminStatus();
+        }
+
+        async function checkAdminStatus() {
+            const adminBtn = document.getElementById('adminBtn');
+            const loginForm = document.getElementById('adminLoginForm');
+            const adminPanel = document.getElementById('adminPanel');
+            
+            if (!adminSessionId) {
+                adminBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>';
+                loginForm.style.display = 'block';
+                adminPanel.style.display = 'none';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId: adminSessionId })
+                });
+                const data = await response.json();
+                
+                if (data.isAdmin) {
+                    adminBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>';
+                    adminBtn.style.background = 'linear-gradient(135deg, #0071e3, #0077ed)';
+                    adminBtn.style.color = 'white';
+                    loginForm.style.display = 'none';
+                    adminPanel.style.display = 'block';
+                } else {
+                    adminSessionId = null;
+                    localStorage.removeItem('adminSessionId');
+                    adminBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>';
+                    adminBtn.style.background = '';
+                    adminBtn.style.color = '';
+                    loginForm.style.display = 'block';
+                    adminPanel.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error checking admin status:', error);
+            }
+        }
+
+        async function adminLogin() {
+            const username = document.getElementById('adminUsername').value;
+            const password = document.getElementById('adminPassword').value;
+
+            try {
+                const response = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    adminSessionId = data.sessionId;
+                    localStorage.setItem('adminSessionId', adminSessionId);
+                    document.getElementById('adminUsername').value = '';
+                    document.getElementById('adminPassword').value = '';
+                    toggleAdminModal();
+                    checkAdminStatus();
+                    loadMessages();
+                } else {
+                    alert('Invalid credentials');
+                }
+            } catch (error) {
+                console.error('Error logging in:', error);
+                alert('Error logging in');
+            }
+        }
+
+        async function adminLogout() {
+            try {
+                await fetch('/api/admin/logout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId: adminSessionId })
+                });
+                
+                adminSessionId = null;
+                localStorage.removeItem('adminSessionId');
+                toggleAdminModal();
+                checkAdminStatus();
+                loadMessages();
+            } catch (error) {
+                console.error('Error logging out:', error);
+            }
+        }
+
+        // Image upload preview
+        function initImageUpload() {
+            const imageUpload = document.getElementById('imageUpload');
+            const imagePreview = document.getElementById('imagePreview');
+            
+            if (!imageUpload) return;
+            
+            imageUpload.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    console.log('Image selected:', file.name, file.type);
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        imagePreview.innerHTML = `
+                            <div class="preview-container">
+                                <img src="${e.target.result}" alt="Preview" />
+                                <button class="remove-image" onclick="removeImage()">×</button>
+                            </div>
+                        `;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        function removeImage() {
+            document.getElementById('imageUpload').value = '';
+            document.getElementById('imagePreview').innerHTML = '';
+        }
 
         // Load messages when page loads
         window.onload = () => {
             loadMessages();
             updateCharCount();
             initDarkMode();
-            updateBottomQuote();
             initFAB();
+            initImageUpload();
+            checkAdminStatus();
         };
 
         // FAB collapse functionality
@@ -172,13 +310,6 @@
                     fab.classList.add('collapsed');
                 }, 1000);
             });
-        }
-
-        // Update bottom quote based on section
-        function updateBottomQuote() {
-            const quotes = sectionQuotes[currentSection] || sectionQuotes['all'];
-            const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
-            document.getElementById('bottomQuoteText').textContent = randomQuote;
         }
 
         // Dark mode functionality
@@ -225,7 +356,6 @@
             document.getElementById('sectionTitle').textContent = titles[section].title;
             document.getElementById('sectionSubtitle').textContent = titles[section].subtitle;
 
-            updateBottomQuote();
             loadMessages();
         }
 
@@ -261,33 +391,46 @@
         // Post a new message
         async function postMessage() {
             const messageText = messageInput.value.trim();
+            const imageUpload = document.getElementById('imageUpload');
             const modalContent = document.querySelector('.modal-content');
             
-            if (!messageText) {
+            // Allow posting if either message or image is present
+            if (!messageText && (!imageUpload || !imageUpload.files[0])) {
                 modalContent.classList.add('shake');
                 setTimeout(() => modalContent.classList.remove('shake'), 400);
                 return;
             }
 
             try {
+                const formData = new FormData();
+                formData.append('message', messageText || '');
+                formData.append('category', selectedCategory);
+                
+                if (imageUpload && imageUpload.files[0]) {
+                    console.log('Uploading image:', imageUpload.files[0].name);
+                    formData.append('image', imageUpload.files[0]);
+                }
+
                 const response = await fetch('/api/messages', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ 
-                        message: messageText,
-                        category: selectedCategory
-                    })
+                    body: formData
                 });
 
                 if (response.ok) {
+                    const result = await response.json();
+                    console.log('Message posted successfully:', result);
                     messageInput.value = '';
+                    if (imageUpload) {
+                        imageUpload.value = '';
+                        document.getElementById('imagePreview').innerHTML = '';
+                    }
                     updateCharCount();
                     toggleModal();
                     createConfetti();
                     loadMessages();
                 } else {
+                    const error = await response.json();
+                    console.error('Error response:', error);
                     alert('Error posting message. Please try again.');
                 }
             } catch (error) {
@@ -341,6 +484,7 @@
                         </div>
                     </div>
                     <p class="message-text">${escapeHtml(msg.text)}</p>
+                    ${msg.image ? `<img src="${msg.image}" alt="Attached image" class="message-image" onclick="openImageModal('${msg.image}')" />` : ''}
                 `;
                 
                 fragment.appendChild(card);
@@ -417,6 +561,36 @@
             return `${days}d ago`;
         }
 
+        // Image modal functions
+        function openImageModal(imageSrc) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modal.classList.add('active');
+            modalImg.src = imageSrc;
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Image modal functions
+        function openImageModal(imageSrc) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modal.classList.add('active');
+            modalImg.src = imageSrc;
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
         // Escape HTML to prevent XSS
         function escapeHtml(text) {
             const div = document.createElement('div');
@@ -442,15 +616,29 @@
 
         // Delete message
         async function deleteMessage(messageId) {
+            if (!adminSessionId) {
+                alert('Admin login required to delete messages');
+                toggleAdminModal();
+                return;
+            }
+            
             if (!confirm('Delete this message?')) return;
             
             try {
                 const response = await fetch(`/api/messages/${messageId}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId: adminSessionId })
                 });
 
                 if (response.ok) {
                     loadMessages();
+                } else if (response.status === 403) {
+                    alert('Unauthorized. Please login as admin.');
+                    adminSessionId = null;
+                    localStorage.removeItem('adminSessionId');
+                    checkAdminStatus();
+                    toggleAdminModal();
                 } else {
                     alert('Error deleting message. Please try again.');
                 }

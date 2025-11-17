@@ -6,10 +6,10 @@
 
 :root {
     --background-color: #f5f5f7;
-    --card-background: #ffffff;
-    --text-color: #1d1d1f;
+    --card-background: rgba(255, 255, 255, 0.7);
+    --text-color: #000000;
     --subtle-text-color: #6e6e73;
-    --border-color: #d2d2d7;
+    --border-color: rgba(0, 0, 0, 0.1);
     --accent-color: #0071e3;
     --accent-color-hover: #0077ed;
     --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -33,6 +33,55 @@ body.dark-mode {
     --accent-color-hover: #409cff;
     --navbar-bg: rgba(28, 28, 30, 0.8);
     --modal-bg: rgba(0, 0, 0, 0.7);
+}
+
+/* Image Modal/Lightbox */
+.image-modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.95);
+    justify-content: center;
+    align-items: center;
+    cursor: zoom-out;
+}
+
+.image-modal.active {
+    display: flex;
+}
+
+.image-modal img {
+    max-width: 90%;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.image-modal-close {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    font-size: 3rem;
+    color: white;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.1);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s;
+    line-height: 1;
+}
+
+.image-modal-close:hover {
+    background: rgba(255, 255, 255, 0.2);
 }
 
 body {
@@ -70,6 +119,7 @@ body {
 .navbar {
     background: var(--navbar-bg);
     backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
     padding: 1rem 2rem;
     border-bottom: 1px solid var(--border-color);
     position: sticky;
@@ -95,7 +145,7 @@ body {
 
 .nav-brand h1 {
     font-size: 1.25rem;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text-color);
     margin: 0;
 }
@@ -129,6 +179,47 @@ body {
     transform: scale(0.95);
 }
 
+.admin-toggle {
+    background: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.admin-toggle:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.admin-toggle:active {
+    transform: scale(0.95);
+}
+
+.admin-input {
+    width: 100%;
+    padding: 0.875rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+    margin-bottom: 0.75rem;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.admin-input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.1);
+}
+
 .nav-links {
     display: flex;
     gap: 0.5rem;
@@ -140,11 +231,11 @@ body {
     border: none;
     padding: 0.6rem 1.2rem;
     border-radius: 8px;
-    font-size: 0.9rem;
-    font-weight: 500;
+    font-size: 0.95rem;
+    font-weight: 600;
     cursor: pointer;
     transition: background-color 0.3s ease, color 0.3s ease;
-    color: var(--subtle-text-color);
+    color: var(--text-color);
 }
 
 .nav-btn:hover {
@@ -422,6 +513,138 @@ body.dark-mode #messageInput:focus {
     box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2);
 }
 
+/* Image Upload Section */
+.image-upload-section {
+    margin: 1.5rem 0;
+}
+
+.image-upload-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1.75rem;
+    background: var(--card-background);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.95rem;
+    color: var(--text-color);
+    font-weight: 500;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.image-upload-label:hover {
+    border-color: var(--accent-color);
+    background: rgba(10, 132, 255, 0.05);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(10, 132, 255, 0.12);
+}
+
+.image-upload-label:active {
+    transform: translateY(0);
+}
+
+.upload-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--accent-color);
+    transition: transform 0.3s ease;
+}
+
+.image-upload-label:hover .upload-icon {
+    transform: rotate(12deg) scale(1.1);
+}
+
+.upload-text {
+    font-weight: 500;
+    letter-spacing: 0.2px;
+}
+
+.image-preview {
+    margin-top: 1rem;
+    animation: fadeIn 0.3s ease;
+}
+
+.preview-container {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    background: var(--card-background);
+    padding: 4px;
+}
+
+.preview-container:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.preview-container img {
+    max-width: 100%;
+    max-height: 200px;
+    display: block;
+    border-radius: 8px;
+}
+
+.remove-image {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.3rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+}
+
+.preview-container:hover .remove-image {
+    opacity: 1;
+}
+
+.remove-image:hover {
+    background: rgba(255, 68, 68, 0.95);
+    border-color: rgba(255, 68, 68, 0.3);
+    transform: scale(1.1);
+}
+
+.remove-image:active {
+    transform: scale(0.95);
+}
+
+/* Message Image */
+.message-image {
+    width: 100%;
+    max-height: 300px;
+    object-fit: contain;
+    border-radius: 12px;
+    margin-top: 1rem;
+    border: 1px solid var(--border-color);
+    transition: transform 0.3s ease;
+    cursor: pointer;
+    background: var(--card-background);
+}
+
+.message-image:hover {
+    transform: scale(1.01);
+}
+
 .form-footer {
     display: flex;
     justify-content: space-between;
@@ -458,8 +681,8 @@ body.dark-mode #messageInput:focus {
     max-width: 1200px;
     margin: 0 auto;
     padding: 3rem 2rem;
-    height: calc(100vh - 80px);
-    overflow: hidden;
+    min-height: calc(100vh - 80px);
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
 }
@@ -472,7 +695,7 @@ body.dark-mode #messageInput:focus {
 
 .section-header h2 {
     font-size: 2.8rem;
-    font-weight: 600;
+    font-weight: 700;
     margin-bottom: 0.5rem;
 }
 
@@ -562,7 +785,8 @@ body.dark-mode .inspirational-quote {
     position: relative;
     flex: 1;
     width: 100%;
-    overflow: hidden;
+    min-height: 400px;
+    margin-bottom: 2rem;
 }
 
 /* Animations */
@@ -591,13 +815,17 @@ body.dark-mode .inspirational-quote {
 
 .message-card {
     background: var(--card-background);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 1.5rem;
     border-radius: 16px;
     border: 1px solid var(--border-color);
-    padding: 1.5rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
     display: flex;
     flex-direction: column;
     transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     transform-style: preserve-3d;
     perspective: 1000px;
     position: absolute;
@@ -638,6 +866,7 @@ body.dark-mode .inspirational-quote {
     transform: translateY(-8px) rotateX(var(--rotate-x, 0deg)) rotateY(var(--rotate-y, 0deg));
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
     border-color: var(--card-accent, var(--border-color));
+    z-index: 10;
 }
 
 .message-card:hover::before {
@@ -763,6 +992,7 @@ body.dark-mode .message-card:hover::before {
     line-height: 1.6;
     word-wrap: break-word;
     color: var(--text-color);
+    font-weight: 500;
 }
 
 .no-messages {

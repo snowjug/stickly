@@ -7,10 +7,15 @@
     "start": "node server.js",
     "dev": "node server.js"
   },
-  "keywords": ["anonymous", "message-board", "nodejs"],
+  "keywords": [
+    "anonymous",
+    "message-board",
+    "nodejs"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "multer": "^2.0.2"
   }
 }
