@@ -18,15 +18,8 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 // Configure multer for image uploads
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadsDir);
-    },
-    filename: (req, file, cb) => {
-        const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname);
-        cb(null, uniqueName);
-    }
-});
+// For Vercel, we need to handle this differently since serverless functions don't have persistent file storage
+const storage = multer.memoryStorage(); // Use memory storage for serverless compatibility
 
 const upload = multer({
     storage: storage,
@@ -96,22 +89,33 @@ app.post('/api/admin/check', (req, res) => {
 
 // Post a new message with optional image
 app.post('/api/messages', upload.single('image'), (req, res) => {
-    const { message, category } = req.body;
+    const { message, category, imageUrl } = req.body;
     
-    // Allow posting if either message or image is present
-    if ((!message || message.trim() === '') && !req.file) {
+    // Allow posting if either message, file, or URL is present
+    if ((!message || message.trim() === '') && !req.file && (!imageUrl || !imageUrl.trim())) {
         return res.status(400).json({ error: 'Message or image is required' });
     }
     
     const validCategories = ['inspiration', 'knowledge', 'thoughts', 'confessions'];
     const messageCategory = validCategories.includes(category) ? category : 'thoughts';
     
+    // Handle image - either from file upload or URL
+    let imageDataUrl = null;
+    if (req.file) {
+        // Convert uploaded file buffer to base64 data URL for serverless compatibility
+        const base64 = req.file.buffer.toString('base64');
+        imageDataUrl = `data:${req.file.mimetype};base64,${base64}`;
+    } else if (imageUrl && imageUrl.trim()) {
+        // Use the provided URL directly
+        imageDataUrl = imageUrl.trim();
+    }
+    
     const newMessage = {
         id: Date.now(),
         text: message ? message.trim() : '',
         category: messageCategory,
         timestamp: new Date().toISOString(),
-        image: req.file ? `/uploads/${req.file.filename}` : null
+        image: imageDataUrl
     };
     
     messages.unshift(newMessage); // Add to beginning of array
@@ -132,16 +136,6 @@ app.delete('/api/messages/:id', (req, res) => {
     
     if (index === -1) {
         return res.status(404).json({ error: 'Message not found' });
-    }
-    
-    const message = messages[index];
-    
-    // Delete image file if it exists
-    if (message.image) {
-        const imagePath = path.join(__dirname, 'public', message.image);
-        if (fs.existsSync(imagePath)) {
-            fs.unlinkSync(imagePath);
-        }
     }
     
     messages.splice(index, 1);

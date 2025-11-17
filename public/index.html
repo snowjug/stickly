@@ -88,6 +88,14 @@
                         accept="image/jpeg,image/jpg,image/gif,image/png"
                         style="display: none;"
                     />
+                    <div style="text-align: center; margin: 0.5rem 0; color: var(--subtle-text-color); font-size: 0.9rem;">or</div>
+                    <input 
+                        type="url" 
+                        id="imageUrl" 
+                        placeholder="Paste image/GIF URL"
+                        class="admin-input"
+                        style="margin-bottom: 0.5rem;"
+                    />
                     <div id="imagePreview" class="image-preview"></div>
                 </div>
                 <div class="form-footer">
@@ -251,6 +259,7 @@
         // Image upload preview
         function initImageUpload() {
             const imageUpload = document.getElementById('imageUpload');
+            const imageUrl = document.getElementById('imageUrl');
             const imagePreview = document.getElementById('imagePreview');
             
             if (!imageUpload) return;
@@ -259,6 +268,7 @@
                 const file = e.target.files[0];
                 if (file) {
                     console.log('Image selected:', file.name, file.type);
+                    imageUrl.value = ''; // Clear URL input
                     const reader = new FileReader();
                     reader.onload = (e) => {
                         imagePreview.innerHTML = `
@@ -271,10 +281,29 @@
                     reader.readAsDataURL(file);
                 }
             });
+            
+            // Handle URL input
+            if (imageUrl) {
+                imageUrl.addEventListener('input', (e) => {
+                    const url = e.target.value.trim();
+                    if (url) {
+                        imageUpload.value = ''; // Clear file upload
+                        imagePreview.innerHTML = `
+                            <div class="preview-container">
+                                <img src="${url}" alt="Preview" onerror="this.parentElement.innerHTML='<p style=\"color: var(--subtle-text-color); text-align: center;\">Invalid image URL</p>';" />
+                                <button class="remove-image" onclick="removeImage()">×</button>
+                            </div>
+                        `;
+                    } else {
+                        imagePreview.innerHTML = '';
+                    }
+                });
+            }
         }
 
         function removeImage() {
             document.getElementById('imageUpload').value = '';
+            document.getElementById('imageUrl').value = '';
             document.getElementById('imagePreview').innerHTML = '';
         }
 
@@ -362,6 +391,21 @@
         // Toggle modal
         function toggleModal() {
             const modal = document.getElementById('postModal');
+            const isClosing = modal.classList.contains('show');
+            
+            if (isClosing) {
+                // Clear inputs when closing modal
+                messageInput.value = '';
+                const imageUpload = document.getElementById('imageUpload');
+                const imageUrl = document.getElementById('imageUrl');
+                if (imageUpload) {
+                    imageUpload.value = '';
+                    imageUrl.value = '';
+                    document.getElementById('imagePreview').innerHTML = '';
+                }
+                updateCharCount();
+            }
+            
             modal.classList.toggle('show');
         }
 
@@ -392,10 +436,11 @@
         async function postMessage() {
             const messageText = messageInput.value.trim();
             const imageUpload = document.getElementById('imageUpload');
+            const imageUrl = document.getElementById('imageUrl');
             const modalContent = document.querySelector('.modal-content');
             
-            // Allow posting if either message or image is present
-            if (!messageText && (!imageUpload || !imageUpload.files[0])) {
+            // Allow posting if either message, file, or URL is present
+            if (!messageText && (!imageUpload || !imageUpload.files[0]) && (!imageUrl || !imageUrl.value.trim())) {
                 modalContent.classList.add('shake');
                 setTimeout(() => modalContent.classList.remove('shake'), 400);
                 return;
@@ -409,6 +454,9 @@
                 if (imageUpload && imageUpload.files[0]) {
                     console.log('Uploading image:', imageUpload.files[0].name);
                     formData.append('image', imageUpload.files[0]);
+                } else if (imageUrl && imageUrl.value.trim()) {
+                    console.log('Using image URL:', imageUrl.value.trim());
+                    formData.append('imageUrl', imageUrl.value.trim());
                 }
 
                 const response = await fetch('/api/messages', {
@@ -422,6 +470,7 @@
                     messageInput.value = '';
                     if (imageUpload) {
                         imageUpload.value = '';
+                        imageUrl.value = '';
                         document.getElementById('imagePreview').innerHTML = '';
                     }
                     updateCharCount();
