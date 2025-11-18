@@ -1,7 +1,6 @@
 const express = require('express');
 const path = require('path');
 const multer = require('multer');
-const fs = require('fs');
 
 const app = express();
 const PORT = 3000;
@@ -10,12 +9,6 @@ const PORT = 3000;
 const ADMIN_USERNAME = 'admin';
 const ADMIN_PASSWORD = 'admin123';
 let adminSessions = new Set(); // Store active admin sessions
-
-// Create uploads directory if it doesn't exist
-const uploadsDir = path.join(__dirname, 'public', 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-}
 
 // Configure multer for image uploads
 // For Vercel, we need to handle this differently since serverless functions don't have persistent file storage
