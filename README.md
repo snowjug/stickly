@@ -2,7 +2,7 @@
 
 > **Your secrets are safe here**
 
-A modern, interactive anonymous message board where users can share their thoughts, inspirations, knowledge, and confessions with the world. Built with a sleek Apple-inspired design featuring draggable message cards, smooth animations, and a fully responsive interface.
+A modern, feature-rich anonymous message board where users can share their thoughts, knowledge, and confessions with the world. Built with a sleek Apple-inspired design featuring smooth animations, likes/reactions, search functionality, and a fully responsive interface optimized for all devices.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen.svg)
@@ -12,19 +12,19 @@ A modern, interactive anonymous message board where users can share their though
 
 - **Anonymous Posting** - Share messages without revealing your identity
 - **Category System** - Organize messages into 4 categories:
-  - ✨ Inspiration
-  - 📚 Knowledge
-  - 💭 Thoughts
-  - 🤫 Confessions
-- **Draggable Cards** - Click and drag message cards anywhere on the page
-- **Dark Mode** - Toggle between light and dark themes with localStorage persistence
-- **Interactive Animations**
-  - Confetti celebration on post
-  - 3D tilt effects on hover
-  - Hanging/swaying card animations
-  - Custom blinking cursor
-- **Responsive Design** - Fully optimized for mobile and desktop
-- **Section-Specific Quotes** - Dynamic inspirational quotes at the bottom
+  - 🕵️ Whistleblower (Matrix rain animation)
+  - 📚 Knowledge (Floating books animation)
+  - 💭 Thoughts (Thought bubbles animation)
+  - 🤫 Confessions (Floating hearts animation)
+- **Like/Reaction System** - Like messages with localStorage tracking and heart animations
+- **Report Functionality** - Report inappropriate content with reason selection
+- **Search & Filter** - Real-time message filtering across all categories
+- **Share Feature** - Share messages via Web Share API or clipboard
+- **Dark Mode** - Toggle between light and dark themes with smooth 0.4s transitions
+- **Admin Authentication** - Secure session-based admin panel
+- **Image Uploads** - Support for both file uploads and URL-based images (base64 encoding)
+- **Interactive Animations** - Category-specific animations (Matrix, books, bubbles, hearts)
+- **Responsive Design** - Professional mobile optimization with touch targets, horizontal scroll nav, and safe area insets
 - **Glassmorphism UI** - Modern glass-like effects throughout
 
 ## 🚀 Quick Start
@@ -37,158 +37,291 @@ A modern, interactive anonymous message board where users can share their though
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
-   git clone <repository-url>
-   cd Devops
+   git clone https://github.com/snowjug/stickly.git
+   cd stickly
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Start the server**
+
    ```bash
    npm start
    ```
 
 4. **Open your browser**
-   ```
+
+   ```text
    Navigate to http://localhost:3000
    ```
 
-## 🏗️ Architecture
-
-```
-Devops/
-│
-├── server.js           # Express server & API endpoints
-├── package.json        # Project dependencies & scripts
-│
-└── public/
-    ├── index.html      # Main HTML structure
-    ├── style.css       # Styles & animations
-    └── (assets)        # Static files served by Express
-```
-
-### System Architecture
-
-```
-┌─────────────┐
-│   Client    │
-│  (Browser)  │
-└──────┬──────┘
-       │
-       │ HTTP Requests
-       │
-┌──────▼──────┐
-│   Express   │
-│   Server    │
-│  (Port 3000)│
-└──────┬──────┘
-       │
-       │ In-Memory
-       │
-┌──────▼──────┐
-│  Messages   │
-│    Array    │
-└─────────────┘
-```
-
 ## 🛠️ Tech Stack
 
-### Backend
-- **Node.js** - JavaScript runtime
-- **Express.js** (v4.18.2) - Web application framework
-- **In-Memory Storage** - Message array (resets on server restart)
+<div align="center">
 
 ### Frontend
-- **HTML5** - Semantic markup
-- **CSS3** - Modern styling with:
-  - CSS Custom Properties (variables)
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+
+### Backend
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)
+
+### Deployment & Tools
+![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
+![Git](https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white)
+![Multer](https://img.shields.io/badge/Multer-FF6600?style=for-the-badge&logo=files&logoColor=white)
+
+</div>
+
+### Frontend Technologies
+
+- **HTML5** - Semantic markup with accessibility features
+- **CSS3** - Modern styling featuring:
+  - CSS Custom Properties (CSS Variables)
   - Flexbox & Grid layouts
   - Glassmorphism effects (backdrop-filter)
-  - Keyframe animations
-  - Media queries for responsiveness
-- **Vanilla JavaScript** - No frameworks, pure DOM manipulation
+  - Keyframe animations (Matrix rain, floating elements)
+  - Media queries for responsive design
+  - Smooth dark mode transitions (0.4s cubic-bezier)
+- **Vanilla JavaScript** - Pure DOM manipulation, no frameworks
+  - LocalStorage API for like tracking and dark mode persistence
+  - Web Share API for native sharing
+  - Clipboard API for fallback sharing
+  - File API for image uploads
+  - Fetch API for backend communication
 
-### Features Implementation
-- **Dark Mode** - CSS custom properties + localStorage API
-- **Drag & Drop** - Mouse events (mousedown, mousemove, mouseup)
-- **Animations** - CSS @keyframes + RequestAnimationFrame
-- **Confetti** - Dynamic DOM element creation
-- **3D Effects** - CSS transforms & perspective
+### Backend Technologies
+
+- **Node.js** - JavaScript runtime environment
+- **Express.js** - Lightweight web application framework
+- **Multer** - Middleware for handling multipart/form-data (image uploads)
+- **In-Memory Storage** - Message, likes, and reports stored in arrays
+
+### Deployment & Analytics
+
+- **Vercel** - Serverless deployment platform
+- **Vercel Analytics** - Page view and performance tracking
+
+## 📊 Version Information
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| **Node.js** | ≥14.0.0 | Runtime environment |
+| **Express.js** | 4.18.2 | Backend framework |
+| **Multer** | 2.0.2 | File upload handling |
+| **Vercel Analytics** | 1.5.0 | Analytics tracking |
+| **Rollbar** | 2.26.5 | Error monitoring |
+| **@rollbar/react** | 1.0.0 | React error tracking |
+
+## 🏗️ Architecture Flow
+
+```mermaid
+graph TD
+    A[Client Browser] -->|HTTP Requests| B[Vercel Edge Network]
+    B -->|Routes Traffic| C[Express.js Server]
+    C -->|Fetch Messages| D[In-Memory Storage]
+    C -->|Upload Images| E[Multer Middleware]
+    E -->|Base64 Encoding| D
+    C -->|Like/Unlike| F[Likes Array]
+    C -->|Report Message| G[Reports Array]
+    D -->|Return Data| C
+    F -->|Return Data| C
+    G -->|Return Data| C
+    C -->|JSON Response| B
+    B -->|Render UI| A
+    A -->|LocalStorage| H[Browser Storage]
+    H -->|Track Likes| A
+    H -->|Dark Mode| A
+    I[Vercel Analytics] -->|Track Pageviews| A
+```
+
+### System Flow
+
+1. **Client Layer**: User interacts with HTML/CSS/JS frontend
+2. **Network Layer**: Vercel edge network handles routing
+3. **Server Layer**: Express.js processes API requests
+4. **Storage Layer**: In-memory arrays store messages, likes, reports
+5. **Analytics Layer**: Vercel Analytics tracks user behavior
+6. **Persistence Layer**: LocalStorage maintains user preferences
 
 ## 📡 API Endpoints
 
 ### GET `/api/messages`
+
 Retrieve all messages or filter by category
 
 **Query Parameters:**
-- `category` (optional) - Filter messages by category (inspiration, knowledge, thoughts, confessions)
+- `category` (optional) - Filter by: `whistleblower`, `knowledge`, `thoughts`, `confessions`
 
 **Response:**
+
 ```json
 [
   {
     "id": 1,
     "text": "Message content here",
-    "category": "inspiration",
-    "timestamp": "2025-11-15T10:30:00.000Z"
+    "category": "whistleblower",
+    "timestamp": "2025-11-18T10:30:00.000Z",
+    "image": "data:image/jpeg;base64,..."
   }
 ]
 ```
 
 ### POST `/api/messages`
+
 Create a new anonymous message
 
 **Request Body:**
+
 ```json
 {
   "message": "Your message here",
-  "category": "thoughts"
+  "category": "thoughts",
+  "imageUrl": "https://example.com/image.jpg"
 }
 ```
 
 **Response:** `201 Created`
 
+### POST `/api/messages/:id/like`
+
+Like a message
+
+**Response:**
+
+```json
+{
+  "likes": 5
+}
+```
+
+### DELETE `/api/messages/:id/like`
+
+Unlike a message
+
+**Response:**
+
+```json
+{
+  "likes": 4
+}
+```
+
+### POST `/api/messages/:id/report`
+
+Report a message
+
+**Request Body:**
+
+```json
+{
+  "reason": "spam"
+}
+```
+
+**Response:** `200 OK`
+
+### GET `/api/messages/counts`
+
+Get message counts per category
+
+**Response:**
+
+```json
+{
+  "whistleblower": 12,
+  "knowledge": 8,
+  "thoughts": 15,
+  "confessions": 10
+}
+```
+
+**Response:** `200 OK`
+
+### GET `/api/admin/check`
+
+Check admin authentication status
+
+**Response:**
+
+```json
+{
+  "authenticated": true
+}
+```
+
+### POST `/api/admin/login`
+
+Admin login
+
+**Request Body:**
+
+```json
+{
+  "password": "admin_password"
+}
+```
+
+**Response:** `200 OK` with session cookie
+
+### POST `/api/admin/logout`
+
+Admin logout
+
+**Response:** `200 OK`
+
 ## 🎨 Design Features
 
 ### Color Scheme
+
 - **Light Mode**: White backgrounds with subtle grays
 - **Dark Mode**: Deep blacks with blue accents
 - **Accent Color**: #0A84FF (Apple blue)
 - **Category Colors**:
-  - Inspiration: #FF6B6B (Red)
-  - Knowledge: #4ECDC4 (Teal)
-  - Thoughts: #95E1D3 (Mint)
-  - Confessions: #F38181 (Pink)
+  - Whistleblower: Matrix green
+  - Knowledge: Teal
+  - Thoughts: Blue
+  - Confessions: Pink
 
 ### Typography
+
 - **Font**: System font stack (SF Pro, Segoe UI, Roboto)
 - **Weights**: 300-600 for hierarchy
 
 ### Animations
-- `fadeInUp` - Card entrance animation
-- `hang` - Continuous swaying effect
-- `confetti-fall` - Celebration particles
-- `blink` - Cursor effect
-- `shake` - Error feedback
+
+- `Matrix Rain` - Whistleblower section (1.5-2.5s)
+- `Floating Books` - Knowledge section (1-2s)
+- `Thought Bubbles` - Thoughts section (0.8-1.5s)
+- `Floating Hearts` - Confessions section (0.8-1.5s)
+- Dark mode transitions - 0.4s cubic-bezier
 
 ## 🔧 Configuration
 
 ### Port Configuration
+
 Default port: `3000`
 
 To change the port, modify `server.js`:
+
 ```javascript
 const PORT = process.env.PORT || 3000;
 ```
 
 ### Message Limit
+
 Default character limit: `500`
 
-To change, update `index.html`:
+To update, modify `public/index.html`:
+
 ```html
 <textarea maxlength="500"></textarea>
 ```
@@ -201,9 +334,136 @@ To change, update `index.html`:
 - ✅ Edge (latest)
 - ⚠️ IE11 (limited support, no backdrop-filter)
 
+## 🔮 Future Enhancements
+
+### Phase 1: Data Persistence & Scalability
+
+- [ ] **Database Integration** - Migrate from in-memory to PostgreSQL/MongoDB
+- [ ] **Redis Caching** - Implement caching for frequently accessed data
+- [ ] **Image Storage** - Move to cloud storage (AWS S3, Cloudinary)
+- [ ] **WebSocket Integration** - Real-time message updates with Socket.io
+- [ ] **Rate Limiting** - Prevent spam with Redis-based rate limiting
+
+### Phase 2: User Experience
+
+- [ ] **User Accounts** - Optional user registration with OAuth (Google, GitHub)
+- [ ] **Notifications** - Email/push notifications for liked messages
+- [ ] **Comment Threads** - Nested replies to messages
+- [ ] **Rich Text Editor** - Markdown support for formatting
+- [ ] **Emoji Reactions** - Multiple reaction types beyond likes
+- [ ] **Message Bookmarks** - Save favorite messages
+- [ ] **Advanced Search** - Full-text search with filters
+- [ ] **Trending Section** - Hot/trending messages algorithm
+
+### Phase 3: Moderation & Safety
+
+- [ ] **AI Content Moderation** - Auto-detect inappropriate content
+- [ ] **Admin Dashboard** - Comprehensive moderation panel
+- [ ] **User Reputation System** - Trust scores based on behavior
+- [ ] **Message Editing** - Allow edits within 5 minutes of posting
+- [ ] **Soft Delete** - Archive deleted messages for audit
+- [ ] **IP Blocking** - Ban malicious users
+- [ ] **Automated Reports** - Flag messages with high report counts
+
+### Phase 4: Advanced Features
+
+- [ ] **Message Analytics** - View counts, engagement metrics
+- [ ] **Export Data** - Download messages as JSON/CSV
+- [ ] **API Documentation** - Swagger/OpenAPI docs
+- [ ] **Mobile Apps** - Native iOS/Android apps
+- [ ] **Internationalization** - Multi-language support
+- [ ] **Accessibility** - WCAG 2.1 AA compliance
+- [ ] **PWA** - Installable progressive web app
+- [ ] **Voice Messages** - Audio message uploads
+
+## 💰 Monetization Strategies
+
+### 1. **Freemium Model**
+
+**Free Tier:**
+- Post up to 10 messages/day
+- Basic like/share features
+- Standard animations
+
+**Premium Tier ($4.99/month):**
+- Unlimited messages
+- Remove ads
+- Custom message themes
+- Priority support
+- Advanced analytics (view counts, engagement)
+- Message pinning
+- Extended character limit (1000 chars)
+
+### 2. **Advertisement Revenue**
+
+- **Google AdSense** - Display non-intrusive banner ads
+- **Native Ads** - Sponsored messages (clearly labeled)
+- **Video Ads** - Reward-based (unlock features temporarily)
+- **Estimated Revenue**: $2-5 CPM, ~$200-500/month with 10K daily active users
+
+### 3. **Enterprise/Educational Plans**
+
+**Business Plan ($49/month):**
+- Private team boards
+- Custom branding
+- Admin analytics dashboard
+- Export reports
+- Dedicated support
+
+**Educational Plan ($29/month):**
+- Classroom discussion boards
+- Teacher moderation tools
+- Student engagement tracking
+- Safe, monitored environment
+
+### 4. **Virtual Goods & Customization**
+
+- **Themes & Skins** - $0.99-$2.99 per theme
+- **Custom Animations** - $1.99 per animation pack
+- **Profile Badges** - $0.49-$1.99 per badge
+- **Message Highlights** - $0.49 to highlight a message for 24 hours
+
+### 5. **Affiliate Marketing**
+
+- Recommend relevant products in Knowledge/Thoughts sections
+- Book recommendations in Knowledge category
+- Wellness products in Confessions category
+- Commission-based revenue (5-10% per sale)
+
+### 6. **Data Analytics (Privacy-Compliant)**
+
+- Aggregate, anonymized trend reports
+- Sentiment analysis for market research
+- Sell insights to research institutions
+- **Privacy**: No personal data, fully GDPR/CCPA compliant
+
+### 7. **API Access**
+
+**Developer Tier ($99/month):**
+- API access for third-party integrations
+- Webhooks for real-time events
+- Higher rate limits
+- Technical documentation
+- Developer support
+
+### Revenue Projections
+
+| Users | Monetization Mix | Estimated Monthly Revenue |
+|-------|------------------|---------------------------|
+| 1K | Ads only | $50-100 |
+| 10K | Ads + 5% Premium | $500-1,000 |
+| 50K | Ads + 10% Premium + Virtual Goods | $5,000-10,000 |
+| 100K+ | Full Stack | $20,000-50,000+ |
+
 ## 🤝 Contributing
 
-This is a personal project by Atharv & Ankit. Feel free to fork and customize!
+This project is maintained by Atharv & Ankit. Contributions are welcome!
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ## 📝 License
 
@@ -211,28 +471,16 @@ This project is open source and available under the MIT License.
 
 ## 👥 Authors
 
-Made with racism by **Atharv & Ankit**
+**Made for Chaos by Atharv & Ankit**
 
 ## 🐛 Known Limitations
 
-- Messages are stored in-memory (lost on server restart)
+- Messages stored in-memory (resets on server restart)
 - No database persistence
-- No user authentication
-- No message editing/deletion
-- No rate limiting
-
-## 🔮 Future Enhancements
-
-- [ ] Database integration (MongoDB/PostgreSQL)
-- [ ] User accounts & authentication
-- [ ] Message reactions & likes
-- [ ] Comment threads
-- [ ] Admin moderation panel
-- [ ] Export messages
-- [ ] Image attachments
-- [ ] Search functionality
-- [ ] WebSocket for real-time updates
+- No message editing after post
+- Admin password stored in plaintext (development only)
+- Images stored as base64 (inefficient for large files)
 
 ---
 
-**Built by Atharv and Ankit with Node.js & Express | Designed for anonymous expression**
+**Built with Node.js & Express | Deployed on Vercel | Designed for anonymous expression**
