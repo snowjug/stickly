@@ -21,6 +21,7 @@
     --color-knowledge: #4ECDC4;
     --color-thoughts: #95E1D3;
     --color-confessions: #F38181;
+    --color-whistleblower: #00FF41;
 }
 
 body.dark-mode {
@@ -904,6 +905,133 @@ body.dark-mode .message-card:hover::before {
     }
 }
 
+/* Matrix Rain Effect */
+.matrix-char {
+    position: fixed;
+    font-family: 'Courier New', monospace;
+    font-size: 20px;
+    color: #00FF41;
+    text-shadow: 0 0 10px #00FF41;
+    pointer-events: none;
+    z-index: 9999;
+    animation: matrix-fall linear forwards;
+}
+
+@keyframes matrix-fall {
+    0% {
+        opacity: 1;
+    }
+    80% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(100vh);
+    }
+}
+
+/* Sparkle Effect for Inspiration */
+.sparkle {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    animation: sparkle-twinkle linear forwards;
+}
+
+@keyframes sparkle-twinkle {
+    0% {
+        opacity: 0;
+        transform: scale(0) rotate(0deg);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1) rotate(180deg);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0) rotate(360deg) translateY(100vh);
+    }
+}
+
+/* Floating Books for Knowledge */
+.floating-book {
+    position: fixed;
+    font-size: 30px;
+    pointer-events: none;
+    z-index: 9999;
+    animation: float-up linear forwards;
+}
+
+@keyframes float-up {
+    0% {
+        opacity: 0;
+        transform: translateY(0) rotate(0deg);
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-100vh) rotate(360deg);
+    }
+}
+
+/* Thought Bubbles for Thoughts */
+.thought-bubble {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    border-radius: 50%;
+    background: rgba(149, 225, 211, 0.6);
+    animation: bubble-float linear forwards;
+}
+
+@keyframes bubble-float {
+    0% {
+        opacity: 0;
+        transform: translateY(0) scale(0.5);
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-100vh) scale(1.5);
+    }
+}
+
+/* Hearts for Confessions */
+.floating-heart {
+    position: fixed;
+    font-size: 25px;
+    pointer-events: none;
+    z-index: 9999;
+    animation: heart-rise linear forwards;
+}
+
+@keyframes heart-rise {
+    0% {
+        opacity: 0;
+        transform: translateY(0) scale(1);
+    }
+    10% {
+        opacity: 1;
+    }
+    50% {
+        transform: translateY(-50vh) scale(1.2);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-100vh) scale(0.8);
+    }
+}
+
 /* Category-specific colors */
 .message-card[data-category="inspiration"] {
     --card-accent: var(--color-inspiration);
@@ -919,6 +1047,10 @@ body.dark-mode .message-card:hover::before {
 
 .message-card[data-category="confessions"] {
     --card-accent: var(--color-confessions);
+}
+
+.message-card[data-category="whistleblower"] {
+    --card-accent: var(--color-whistleblower);
 }
 
 .message-header {

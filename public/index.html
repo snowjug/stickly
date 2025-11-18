@@ -22,6 +22,7 @@
         </div>
         <div class="nav-links">
             <button class="nav-btn active" data-section="all" onclick="switchSection('all')">All</button>
+            <button class="nav-btn" data-section="whistleblower" onclick="switchSection('whistleblower')">🔓 Whistleblower</button>
             <button class="nav-btn" data-section="inspiration" onclick="switchSection('inspiration')">Inspiration</button>
             <button class="nav-btn" data-section="knowledge" onclick="switchSection('knowledge')">Knowledge</button>
             <button class="nav-btn" data-section="thoughts" onclick="switchSection('thoughts')">Thoughts</button>
@@ -52,6 +53,10 @@
                 <div class="category-selector">
                     <label>Choose a category:</label>
                     <div class="category-buttons">
+                        <button class="category-btn" data-category="whistleblower" onclick="selectCategory('whistleblower')">
+                            <span class="emoji">🔓</span>
+                            <span>Whistleblower</span>
+                        </button>
                         <button class="category-btn" data-category="inspiration" onclick="selectCategory('inspiration')">
                             <span class="emoji">✨</span>
                             <span>Inspiration</span>
@@ -376,6 +381,7 @@
 
             const titles = {
                 'all': { title: 'All Messages', subtitle: 'Anonymous messages from around the world' },
+                'whistleblower': { title: 'Whistleblower', subtitle: 'Reveal the truth - Expose scams, corruption, and company secrets' },
                 'inspiration': { title: 'Inspiration', subtitle: 'Find a spark of motivation' },
                 'knowledge': { title: 'Knowledge', subtitle: 'Learn something new today' },
                 'thoughts': { title: 'Thoughts', subtitle: 'Random thoughts and musings' },
@@ -384,6 +390,19 @@
 
             document.getElementById('sectionTitle').textContent = titles[section].title;
             document.getElementById('sectionSubtitle').textContent = titles[section].subtitle;
+
+            // Trigger section-specific effects
+            if (section === 'whistleblower') {
+                createMatrixRain();
+            } else if (section === 'inspiration') {
+                createSparkles();
+            } else if (section === 'knowledge') {
+                createFloatingBooks();
+            } else if (section === 'thoughts') {
+                createThoughtBubbles();
+            } else if (section === 'confessions') {
+                createFloatingHearts();
+            }
 
             loadMessages();
         }
@@ -503,6 +522,7 @@
             const cardsPerRow = Math.floor(containerWidth / (cardWidth + gap));
 
             const categoryEmojis = {
+                'whistleblower': '🔓',
                 'inspiration': '✨',
                 'knowledge': '📚',
                 'thoughts': '💭',
@@ -568,6 +588,120 @@
                     
                     setTimeout(() => confetti.remove(), 4000);
                 }, i * 30);
+            }
+        }
+
+        // Matrix Rain Effect for Whistleblower section
+        function createMatrixRain() {
+            const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+            const drops = 30;
+            
+            for (let i = 0; i < drops; i++) {
+                setTimeout(() => {
+                    const matrixChar = document.createElement('div');
+                    matrixChar.className = 'matrix-char';
+                    matrixChar.textContent = chars[Math.floor(Math.random() * chars.length)];
+                    matrixChar.style.left = Math.random() * 100 + '%';
+                    matrixChar.style.top = '-20px';
+                    
+                    const duration = Math.random() * 2 + 3; // 3-5 seconds
+                    matrixChar.style.animationDuration = duration + 's';
+                    
+                    document.body.appendChild(matrixChar);
+                    
+                    // Remove after animation
+                    setTimeout(() => matrixChar.remove(), duration * 1000);
+                }, i * 50);
+            }
+        }
+
+        // Sparkles Effect for Inspiration section
+        function createSparkles() {
+            const sparkleChars = ['✨', '⭐', '💫', '🌟', '✴️'];
+            const count = 25;
+            
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    const sparkle = document.createElement('div');
+                    sparkle.className = 'sparkle';
+                    sparkle.textContent = sparkleChars[Math.floor(Math.random() * sparkleChars.length)];
+                    sparkle.style.left = Math.random() * 100 + '%';
+                    sparkle.style.top = Math.random() * 100 + '%';
+                    sparkle.style.fontSize = (Math.random() * 20 + 15) + 'px';
+                    
+                    const duration = Math.random() * 2 + 2;
+                    sparkle.style.animationDuration = duration + 's';
+                    
+                    document.body.appendChild(sparkle);
+                    setTimeout(() => sparkle.remove(), duration * 1000);
+                }, i * 40);
+            }
+        }
+
+        // Floating Books Effect for Knowledge section
+        function createFloatingBooks() {
+            const bookEmojis = ['📕', '📗', '📘', '📙', '📚', '📖'];
+            const count = 20;
+            
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    const book = document.createElement('div');
+                    book.className = 'floating-book';
+                    book.textContent = bookEmojis[Math.floor(Math.random() * bookEmojis.length)];
+                    book.style.left = Math.random() * 100 + '%';
+                    book.style.bottom = '-50px';
+                    
+                    const duration = Math.random() * 3 + 4;
+                    book.style.animationDuration = duration + 's';
+                    
+                    document.body.appendChild(book);
+                    setTimeout(() => book.remove(), duration * 1000);
+                }, i * 60);
+            }
+        }
+
+        // Thought Bubbles Effect for Thoughts section
+        function createThoughtBubbles() {
+            const count = 15;
+            
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    const bubble = document.createElement('div');
+                    bubble.className = 'thought-bubble';
+                    const size = Math.random() * 40 + 20;
+                    bubble.style.width = size + 'px';
+                    bubble.style.height = size + 'px';
+                    bubble.style.left = Math.random() * 100 + '%';
+                    bubble.style.bottom = '-50px';
+                    
+                    const duration = Math.random() * 3 + 3;
+                    bubble.style.animationDuration = duration + 's';
+                    
+                    document.body.appendChild(bubble);
+                    setTimeout(() => bubble.remove(), duration * 1000);
+                }, i * 80);
+            }
+        }
+
+        // Floating Hearts Effect for Confessions section
+        function createFloatingHearts() {
+            const heartEmojis = ['❤️', '💕', '💖', '💗', '💓', '💝'];
+            const count = 20;
+            
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    const heart = document.createElement('div');
+                    heart.className = 'floating-heart';
+                    heart.textContent = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+                    heart.style.left = Math.random() * 100 + '%';
+                    heart.style.bottom = '-50px';
+                    
+                    const duration = Math.random() * 2 + 3;
+                    heart.style.animationDuration = duration + 's';
+                    
+                    document.body.appendChild(heart);
+                    setTimeout(() => heart.remove(), duration * 1000);
+                }, i * 50);
             }
         }
 

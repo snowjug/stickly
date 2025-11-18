@@ -96,7 +96,7 @@ app.post('/api/messages', upload.single('image'), (req, res) => {
         return res.status(400).json({ error: 'Message or image is required' });
     }
     
-    const validCategories = ['inspiration', 'knowledge', 'thoughts', 'confessions'];
+    const validCategories = ['whistleblower', 'inspiration', 'knowledge', 'thoughts', 'confessions'];
     const messageCategory = validCategories.includes(category) ? category : 'thoughts';
     
     // Handle image - either from file upload or URL
