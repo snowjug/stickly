@@ -116,7 +116,7 @@
                 </div>
                 <div class="form-footer">
                     <span class="char-count">0/500</span>
-                    <button class="post-btn" onclick="postMessage()">Post</button>
+                    <button class="post-btn" id="postBtn" onclick="postMessage()">Post</button>
                 </div>
             </div>
         </div>
@@ -636,6 +636,7 @@
             const imageUpload = document.getElementById('imageUpload');
             const imageUrl = document.getElementById('imageUrl');
             const modalContent = document.querySelector('.modal-content');
+            const postBtn = document.getElementById('postBtn');
             
             // Allow posting if either message, file, or URL is present
             if (!messageText && (!imageUpload || !imageUpload.files[0]) && (!imageUrl || !imageUrl.value.trim())) {
@@ -643,6 +644,16 @@
                 setTimeout(() => modalContent.classList.remove('shake'), 400);
                 return;
             }
+
+            // Prevent multiple clicks
+            if (postBtn.disabled) return;
+            
+            // Disable button and show loading state
+            postBtn.disabled = true;
+            const originalText = postBtn.textContent;
+            postBtn.textContent = 'Posting...';
+            postBtn.style.opacity = '0.6';
+            postBtn.style.cursor = 'not-allowed';
 
             try {
                 const formData = new FormData();
@@ -670,6 +681,14 @@
                 if (response.ok) {
                     const result = await response.json();
                     console.log('Message posted successfully:', result);
+                    
+                    // Show success feedback
+                    postBtn.textContent = '✔ Posted!';
+                    postBtn.style.background = 'linear-gradient(135deg, #52c234, #61e049)';
+                    
+                    // Wait a moment to show success state
+                    await new Promise(resolve => setTimeout(resolve, 800));
+                    
                     messageInput.value = '';
                     if (imageUpload) {
                         imageUpload.value = '';
@@ -685,11 +704,24 @@
                 } else {
                     const error = await response.json();
                     console.error('Error response:', error);
+                    postBtn.textContent = '✗ Failed';
+                    postBtn.style.background = 'linear-gradient(135deg, #ff4444, #cc0000)';
+                    await new Promise(resolve => setTimeout(resolve, 1500));
                     alert('Error posting message. Please try again.');
                 }
             } catch (error) {
                 console.error('Error posting message:', error);
+                postBtn.textContent = '✗ Error';
+                postBtn.style.background = 'linear-gradient(135deg, #ff4444, #cc0000)';
+                await new Promise(resolve => setTimeout(resolve, 1500));
                 alert('Error posting message. Please try again.');
+            } finally {
+                // Reset button state
+                postBtn.disabled = false;
+                postBtn.textContent = originalText;
+                postBtn.style.opacity = '1';
+                postBtn.style.cursor = 'pointer';
+                postBtn.style.background = '';
             }
         }
 
@@ -830,29 +862,6 @@
                     // Remove after animation
                     setTimeout(() => matrixChar.remove(), duration * 1000);
                 }, i * 50);
-            }
-        }
-
-        // Sparkles Effect for Inspiration section
-        function createSparkles() {
-            const sparkleChars = ['✨', '⭐', '💫', '🌟', '✴️'];
-            const count = 25;
-            
-            for (let i = 0; i < count; i++) {
-                setTimeout(() => {
-                    const sparkle = document.createElement('div');
-                    sparkle.className = 'sparkle';
-                    sparkle.textContent = sparkleChars[Math.floor(Math.random() * sparkleChars.length)];
-                    sparkle.style.left = Math.random() * 100 + '%';
-                    sparkle.style.top = Math.random() * 100 + '%';
-                    sparkle.style.fontSize = (Math.random() * 20 + 15) + 'px';
-                    
-                    const duration = Math.random() * 1 + 1;
-                    sparkle.style.animationDuration = duration + 's';
-                    
-                    document.body.appendChild(sparkle);
-                    setTimeout(() => sparkle.remove(), duration * 1000);
-                }, i * 40);
             }
         }
 
