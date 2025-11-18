@@ -126,18 +126,18 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: auto 1fr auto auto auto;
     align-items: center;
-    flex-wrap: wrap;
     gap: 1rem;
-    transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .nav-brand {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    flex-shrink: 0;
 }
 
 .logo {
@@ -169,6 +169,7 @@ body {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex-shrink: 0;
 }
 
 .dark-mode-toggle:hover {
@@ -191,6 +192,7 @@ body {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex-shrink: 0;
 }
 
 .admin-toggle svg {
@@ -228,7 +230,14 @@ body {
 .nav-links {
     display: flex;
     gap: 0.5rem;
-    flex-wrap: wrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding: 0.25rem 0;
+}
+
+.nav-links::-webkit-scrollbar {
+    display: none;
 }
 
 .nav-btn {
@@ -241,6 +250,8 @@ body {
     cursor: pointer;
     transition: background-color 0.3s ease, color 0.3s ease;
     color: var(--text-color);
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .nav-btn:hover {
@@ -1142,6 +1153,129 @@ body.dark-mode .message-card:hover::before {
     border: 1px solid var(--border-color);
 }
 
+/* Search Container */
+.search-container {
+    min-width: 180px;
+    max-width: 220px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+#searchInput {
+    width: 100%;
+    padding: 0.6rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    background: var(--background-color);
+    color: var(--text-color);
+    font-size: 0.9rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#searchInput:focus {
+    outline: none;
+    border-color: var(--card-accent, #0071e3);
+    box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+}
+
+/* Message Footer Actions */
+.message-footer {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+    align-items: center;
+}
+
+.like-btn,
+.share-btn,
+.report-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 0.4rem 0.8rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--text-color);
+}
+
+.like-btn:hover,
+.share-btn:hover,
+.report-btn:hover {
+    transform: scale(1.05);
+    border-color: var(--card-accent, #0071e3);
+}
+
+.like-btn.liked {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+    border-color: #ff6b6b;
+    color: white;
+}
+
+.like-btn.liked .heart-icon {
+    animation: heartBeat 0.3s ease;
+}
+
+@keyframes heartBeat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+}
+
+.like-count {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    gap: 1rem;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid var(--border-color);
+    border-top-color: var(--card-accent, #0071e3);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-spinner p {
+    color: var(--subtle-text-color);
+    font-size: 0.9rem;
+}
+
+/* Dark mode smooth transition */
+body,
+.navbar,
+.message-card,
+.modal-content,
+.nav-btn,
+.dark-mode-toggle,
+.admin-toggle,
+#searchInput,
+.like-btn,
+.share-btn,
+.report-btn {
+    transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     body {
@@ -1194,6 +1328,17 @@ body.dark-mode .message-card:hover::before {
         white-space: nowrap;
         flex-shrink: 0;
         min-width: fit-content;
+    }
+
+    .search-container {
+        width: 100%;
+        order: 10;
+        flex: 1 1 100%;
+    }
+
+    #searchInput {
+        font-size: 0.85rem;
+        padding: 0.5rem 0.8rem;
     }
 
     .dark-mode-toggle,
@@ -1342,6 +1487,28 @@ body.dark-mode .message-card:hover::before {
         padding: 1rem;
         font-size: 1rem;
     }
+
+    .message-footer {
+        flex-wrap: wrap;
+        gap: 0.4rem;
+    }
+
+    .like-btn,
+    .share-btn,
+    .report-btn {
+        padding: 0.5rem 0.7rem;
+        font-size: 0.85rem;
+    }
+
+    .loading-spinner {
+        padding: 2rem;
+    }
+
+    .spinner {
+        width: 40px;
+        height: 40px;
+    }
+
     /* Hide animations on mobile for better performance */
     .confetti,
     .matrix-char,

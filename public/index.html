@@ -26,10 +26,12 @@
         <div class="nav-links">
             <button class="nav-btn active" data-section="all" onclick="switchSection('all')">All</button>
             <button class="nav-btn" data-section="whistleblower" onclick="switchSection('whistleblower')">🔓 Whistleblower</button>
-            <button class="nav-btn" data-section="inspiration" onclick="switchSection('inspiration')">Inspiration</button>
             <button class="nav-btn" data-section="knowledge" onclick="switchSection('knowledge')">Knowledge</button>
             <button class="nav-btn" data-section="thoughts" onclick="switchSection('thoughts')">Thoughts</button>
             <button class="nav-btn" data-section="confessions" onclick="switchSection('confessions')">Confessions</button>
+        </div>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="🔍 Search messages..." oninput="filterMessages()">
         </div>
         <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle dark mode">
             <span id="darkModeIcon">🌙</span>
@@ -59,10 +61,6 @@
                         <button class="category-btn" data-category="whistleblower" onclick="selectCategory('whistleblower')">
                             <span class="emoji">🔓</span>
                             <span>Whistleblower</span>
-                        </button>
-                        <button class="category-btn" data-category="inspiration" onclick="selectCategory('inspiration')">
-                            <span class="emoji">✨</span>
-                            <span>Inspiration</span>
                         </button>
                         <button class="category-btn" data-category="knowledge" onclick="selectCategory('knowledge')">
                             <span class="emoji">📚</span>
@@ -151,7 +149,35 @@
             <h2 id="sectionTitle">All Messages</h2>
             <p id="sectionSubtitle">Anonymous messages from around the world</p>
         </div>
+        <div id="loadingSpinner" class="loading-spinner" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading messages...</p>
+        </div>
         <div id="messagesList"></div>
+    </div>
+
+    <!-- Report Modal -->
+    <div id="reportModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2>Report Message</h2>
+                <button class="close-btn" onclick="closeReportModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 1rem; color: var(--text-color);">Why are you reporting this message?</p>
+                <select id="reportReason" class="admin-input" style="margin-bottom: 1rem;">
+                    <option value="">Select a reason...</option>
+                    <option value="spam">Spam</option>
+                    <option value="harassment">Harassment or bullying</option>
+                    <option value="hate">Hate speech</option>
+                    <option value="violence">Violence or threats</option>
+                    <option value="inappropriate">Inappropriate content</option>
+                    <option value="other">Other</option>
+                </select>
+                <button class="post-btn" onclick="submitReport()" style="width: 100%;">Submit Report</button>
+                <button class="cancel-btn" onclick="closeReportModal()" style="width: 100%; margin-top: 0.5rem;">Cancel</button>
+            </div>
+        </div>
     </div>
 
     <!-- Image Modal -->
@@ -162,7 +188,7 @@
 
     <!-- Footer -->
     <footer class="footer">
-        <p>Made with racism by Atharv & Ankit</p>
+        <p>Made for Chaos by Atharv & Ankit</p>
     </footer>
 
     <script>
@@ -377,6 +403,8 @@
         // Switch section
         function switchSection(section) {
             currentSection = section;
+            searchQuery = ''; // Reset search when switching sections
+            document.getElementById('searchInput').value = '';
             
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.section === section);
@@ -385,7 +413,6 @@
             const titles = {
                 'all': { title: 'All Messages', subtitle: 'Anonymous messages from around the world' },
                 'whistleblower': { title: 'Whistleblower', subtitle: 'Reveal the truth - Expose scams, corruption, and company secrets' },
-                'inspiration': { title: 'Inspiration', subtitle: 'Find a spark of motivation' },
                 'knowledge': { title: 'Knowledge', subtitle: 'Learn something new today' },
                 'thoughts': { title: 'Thoughts', subtitle: 'Random thoughts and musings' },
                 'confessions': { title: 'Confessions', subtitle: 'Anonymous secrets and stories' }
@@ -397,8 +424,6 @@
             // Trigger section-specific effects
             if (section === 'whistleblower') {
                 createMatrixRain();
-            } else if (section === 'inspiration') {
-                createSparkles();
             } else if (section === 'knowledge') {
                 createFloatingBooks();
             } else if (section === 'thoughts') {
@@ -441,6 +466,12 @@
 
         // Load messages
         async function loadMessages() {
+            const spinner = document.getElementById('loadingSpinner');
+            const messagesList = document.getElementById('messagesList');
+            
+            spinner.style.display = 'block';
+            messagesList.style.opacity = '0.5';
+            
             try {
                 const url = currentSection === 'all' 
                     ? '/api/messages' 
@@ -448,9 +479,14 @@
                 
                 const response = await fetch(url);
                 const messages = await response.json();
+                allMessages = messages; // Store for filtering
                 displayMessages(messages);
+                updateMessageCounts();
             } catch (error) {
                 console.error('Error loading messages:', error);
+            } finally {
+                spinner.style.display = 'none';
+                messagesList.style.opacity = '1';
             }
         }
 
@@ -516,8 +552,20 @@
         function displayMessages(messages) {
             const messagesList = document.getElementById('messagesList');
             
-            if (messages.length === 0) {
-                messagesList.innerHTML = '<div class="no-messages">No messages in this category yet. Be the first to share!</div>';
+            // Filter by search query if present
+            let filteredMessages = messages;
+            if (searchQuery) {
+                filteredMessages = messages.filter(msg => 
+                    msg.text.toLowerCase().includes(searchQuery) ||
+                    msg.category.toLowerCase().includes(searchQuery)
+                );
+            }
+            
+            if (filteredMessages.length === 0) {
+                const noMsgText = searchQuery 
+                    ? `No messages found matching "${searchQuery}"`
+                    : 'No messages in this category yet. Be the first to share!';
+                messagesList.innerHTML = `<div class="no-messages">${noMsgText}</div>`;
                 return;
             }
 
@@ -528,16 +576,15 @@
 
             const categoryEmojis = {
                 'whistleblower': '🔓',
-                'inspiration': '✨',
                 'knowledge': '📚',
                 'thoughts': '💭',
                 'confessions': '🤫'
             };
 
             const fragment = document.createDocumentFragment();
-            const totalRows = Math.ceil(messages.length / cardsPerRow);
+            const totalRows = Math.ceil(filteredMessages.length / cardsPerRow);
 
-            messages.forEach((msg, index) => {
+            filteredMessages.forEach((msg, index) => {
                 const timeAgo = getTimeAgo(new Date(msg.timestamp));
                 const row = Math.floor(index / cardsPerRow);
                 const col = index % cardsPerRow;
@@ -549,6 +596,9 @@
                 card.setAttribute('data-category', msg.category);
                 card.style.cssText = `left: ${left}px; top: ${top}px; animation-delay: ${index * 0.05}s; width: ${cardWidth}px;`;
                 
+                const isLiked = likedMessages.includes(msg.id);
+                const likesCount = msg.likes || 0;
+                
                 card.innerHTML = `
                     <div class="message-header">
                         <span class="category-badge">${categoryEmojis[msg.category]} ${msg.category}</span>
@@ -559,6 +609,14 @@
                     </div>
                     <p class="message-text">${escapeHtml(msg.text)}</p>
                     ${msg.image ? `<img src="${msg.image}" alt="Attached image" class="message-image" onclick="openImageModal('${msg.image}')" />` : ''}
+                    <div class="message-footer">
+                        <button class="like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike(${msg.id}, event)" title="Like this message">
+                            <span class="heart-icon">${isLiked ? '❤️' : '🤍'}</span>
+                            <span class="like-count">${likesCount}</span>
+                        </button>
+                        <button class="share-btn" onclick="shareMessage(${msg.id}, event)" title="Share this message">🔗</button>
+                        <button class="report-btn" onclick="openReportModal(${msg.id}, event)" title="Report this message">🚩</button>
+                    </div>
                 `;
                 
                 fragment.appendChild(card);
@@ -656,7 +714,7 @@
                     book.style.left = Math.random() * 100 + '%';
                     book.style.bottom = '-50px';
                     
-                    const duration = Math.random() * 1.5 + 2;
+                    const duration = Math.random() * 1 + 1;
                     book.style.animationDuration = duration + 's';
                     
                     document.body.appendChild(book);
@@ -679,7 +737,7 @@
                     bubble.style.left = Math.random() * 100 + '%';
                     bubble.style.bottom = '-50px';
                     
-                    const duration = Math.random() * 1.5 + 1.5;
+                    const duration = Math.random() * 0.7 + 0.8;
                     bubble.style.animationDuration = duration + 's';
                     
                     document.body.appendChild(bubble);
@@ -701,7 +759,7 @@
                     heart.style.left = Math.random() * 100 + '%';
                     heart.style.bottom = '-50px';
                     
-                    const duration = Math.random() * 1 + 1.5;
+                    const duration = Math.random() * 0.7 + 0.8;
                     heart.style.animationDuration = duration + 's';
                     
                     document.body.appendChild(heart);
@@ -900,6 +958,136 @@
 
         document.addEventListener('mousemove', onMouseMove);
         document.addEventListener('mouseup', onMouseUp);
+
+        // Like/Unlike functionality
+        let likedMessages = JSON.parse(localStorage.getItem('likedMessages') || '[]');
+
+        async function toggleLike(messageId, event) {
+            event.stopPropagation();
+            const isLiked = likedMessages.includes(messageId);
+            
+            try {
+                const endpoint = isLiked ? 'unlike' : 'like';
+                const response = await fetch(`/api/messages/${messageId}/${endpoint}`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Update localStorage
+                    if (isLiked) {
+                        likedMessages = likedMessages.filter(id => id !== messageId);
+                    } else {
+                        likedMessages.push(messageId);
+                    }
+                    localStorage.setItem('likedMessages', JSON.stringify(likedMessages));
+                    
+                    // Update UI
+                    const likeBtn = event.target.closest('.like-btn');
+                    const countSpan = likeBtn.querySelector('.like-count');
+                    countSpan.textContent = data.likes;
+                    likeBtn.classList.toggle('liked', !isLiked);
+                    
+                    // Animate
+                    likeBtn.style.transform = 'scale(1.2)';
+                    setTimeout(() => likeBtn.style.transform = '', 200);
+                }
+            } catch (error) {
+                console.error('Error toggling like:', error);
+            }
+        }
+
+        // Report functionality
+        let currentReportMessageId = null;
+
+        function openReportModal(messageId, event) {
+            event.stopPropagation();
+            currentReportMessageId = messageId;
+            document.getElementById('reportModal').classList.add('show');
+            document.getElementById('reportReason').value = '';
+        }
+
+        function closeReportModal() {
+            document.getElementById('reportModal').classList.remove('show');
+            currentReportMessageId = null;
+        }
+
+        async function submitReport() {
+            const reason = document.getElementById('reportReason').value;
+            
+            if (!reason) {
+                alert('Please select a reason for reporting');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/messages/${currentReportMessageId}/report`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason })
+                });
+                
+                if (response.ok) {
+                    closeReportModal();
+                    alert('Thank you for your report. We will review this message.');
+                }
+            } catch (error) {
+                console.error('Error submitting report:', error);
+                alert('Error submitting report');
+            }
+        }
+
+        // Search/Filter functionality
+        let searchQuery = '';
+        let allMessages = [];
+
+        function filterMessages() {
+            searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
+            displayMessages(allMessages);
+        }
+
+        // Update message counts
+        async function updateMessageCounts() {
+            // Counts removed - function kept for compatibility
+            return;
+        }
+
+        // Share message as image
+        async function shareMessage(messageId, event) {
+            event.stopPropagation();
+            
+            const card = event.target.closest('.message-card');
+            const shareBtn = card.querySelector('.share-btn');
+            
+            // Use modern Web Share API if available
+            if (navigator.share) {
+                try {
+                    const message = allMessages.find(m => m.id === messageId);
+                    await navigator.share({
+                        title: 'Stickly Message',
+                        text: message.text || 'Check out this message!',
+                        url: window.location.href
+                    });
+                } catch (error) {
+                    if (error.name !== 'AbortError') {
+                        console.error('Error sharing:', error);
+                    }
+                }
+            } else {
+                // Fallback: Copy to clipboard
+                const message = allMessages.find(m => m.id === messageId);
+                const text = `${message.text}\n\n- Shared from Stickly`;
+                
+                navigator.clipboard.writeText(text).then(() => {
+                    shareBtn.innerHTML = '✓';
+                    setTimeout(() => shareBtn.innerHTML = '🔗', 1500);
+                }).catch(err => {
+                    console.error('Error copying:', err);
+                    alert('Share failed. Please try again.');
+                });
+            }
+        }
     </script>
 </body>
 </html>

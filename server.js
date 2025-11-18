@@ -38,6 +38,8 @@ const upload = multer({
 
 // Store messages in memory (resets when server restarts)
 let messages = [];
+let messageLikes = {}; // Track likes per message: { messageId: count }
+let messageReports = {}; // Track reports per message: { messageId: [reasons] }
 
 // Middleware
 app.use(express.json());
@@ -96,7 +98,7 @@ app.post('/api/messages', upload.single('image'), (req, res) => {
         return res.status(400).json({ error: 'Message or image is required' });
     }
     
-    const validCategories = ['whistleblower', 'inspiration', 'knowledge', 'thoughts', 'confessions'];
+    const validCategories = ['whistleblower', 'knowledge', 'thoughts', 'confessions'];
     const messageCategory = validCategories.includes(category) ? category : 'thoughts';
     
     // Handle image - either from file upload or URL
@@ -115,7 +117,8 @@ app.post('/api/messages', upload.single('image'), (req, res) => {
         text: message ? message.trim() : '',
         category: messageCategory,
         timestamp: new Date().toISOString(),
-        image: imageDataUrl
+        image: imageDataUrl,
+        likes: 0
     };
     
     messages.unshift(newMessage); // Add to beginning of array
@@ -139,7 +142,102 @@ app.delete('/api/messages/:id', (req, res) => {
     }
     
     messages.splice(index, 1);
+    // Clean up likes and reports
+    delete messageLikes[messageId];
+    delete messageReports[messageId];
     res.status(200).json({ success: true });
+});
+
+// Like a message
+app.post('/api/messages/:id/like', (req, res) => {
+    const messageId = parseInt(req.params.id);
+    const message = messages.find(msg => msg.id === messageId);
+    
+    if (!message) {
+        return res.status(404).json({ error: 'Message not found' });
+    }
+    
+    // Initialize likes count if not exists
+    if (!messageLikes[messageId]) {
+        messageLikes[messageId] = 0;
+    }
+    
+    messageLikes[messageId]++;
+    message.likes = messageLikes[messageId];
+    
+    res.json({ likes: messageLikes[messageId] });
+});
+
+// Unlike a message
+app.post('/api/messages/:id/unlike', (req, res) => {
+    const messageId = parseInt(req.params.id);
+    const message = messages.find(msg => msg.id === messageId);
+    
+    if (!message) {
+        return res.status(404).json({ error: 'Message not found' });
+    }
+    
+    if (messageLikes[messageId] && messageLikes[messageId] > 0) {
+        messageLikes[messageId]--;
+        message.likes = messageLikes[messageId];
+    }
+    
+    res.json({ likes: messageLikes[messageId] || 0 });
+});
+
+// Report a message
+app.post('/api/messages/:id/report', (req, res) => {
+    const messageId = parseInt(req.params.id);
+    const { reason } = req.body;
+    const message = messages.find(msg => msg.id === messageId);
+    
+    if (!message) {
+        return res.status(404).json({ error: 'Message not found' });
+    }
+    
+    if (!messageReports[messageId]) {
+        messageReports[messageId] = [];
+    }
+    
+    messageReports[messageId].push({
+        reason: reason || 'No reason provided',
+        timestamp: new Date().toISOString()
+    });
+    
+    res.json({ success: true, reportCount: messageReports[messageId].length });
+});
+
+// Get reported messages (admin only)
+app.post('/api/admin/reports', (req, res) => {
+    const { sessionId } = req.body;
+    
+    if (!adminSessions.has(sessionId)) {
+        return res.status(403).json({ error: 'Unauthorized' });
+    }
+    
+    const reportedMessages = Object.keys(messageReports)
+        .map(msgId => {
+            const message = messages.find(m => m.id === parseInt(msgId));
+            return message ? {
+                ...message,
+                reports: messageReports[msgId]
+            } : null;
+        })
+        .filter(m => m !== null);
+    
+    res.json(reportedMessages);
+});
+
+// Get message counts by category
+app.get('/api/messages/counts', (req, res) => {
+    const counts = {
+        all: messages.length,
+        whistleblower: messages.filter(m => m.category === 'whistleblower').length,
+        knowledge: messages.filter(m => m.category === 'knowledge').length,
+        thoughts: messages.filter(m => m.category === 'thoughts').length,
+        confessions: messages.filter(m => m.category === 'confessions').length
+    };
+    res.json(counts);
 });
 
 // Start server
