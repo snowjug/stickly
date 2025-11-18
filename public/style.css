@@ -303,14 +303,6 @@ body {
     flex-shrink: 0;
 }
 
-.nav-btn .nav-emoji {
-    margin-right: 0.35rem;
-}
-
-.nav-btn .nav-label {
-    display: inline;
-}
-
 .nav-btn:hover {
     background-color: rgba(0, 0, 0, 0.05);
 }
@@ -1536,14 +1528,6 @@ body,
         min-width: fit-content;
         border-radius: 24px;
         font-weight: 600;
-    }
-
-    .nav-btn .nav-label {
-        display: inline;
-    }
-
-    .nav-btn .nav-emoji {
-        margin-right: 0.35rem;
     }
 
     .search-container {
