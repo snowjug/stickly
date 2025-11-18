@@ -10,22 +10,128 @@ A modern, feature-rich anonymous message board where users can share their thoug
 
 ## ✨ Features
 
+### Core Functionality
+
+#### 📝 Message Management
 - **Anonymous Posting** - Share messages without revealing your identity
-- **Category System** - Organize messages into 4 categories:
-  - 🕵️ Whistleblower (Matrix rain animation)
-  - 📚 Knowledge (Floating books animation)
-  - 💭 Thoughts (Thought bubbles animation)
-  - 🤫 Confessions (Floating hearts animation)
-- **Like/Reaction System** - Like messages with localStorage tracking and heart animations
-- **Report Functionality** - Report inappropriate content with reason selection
-- **Search & Filter** - Real-time message filtering across all categories
-- **Share Feature** - Share messages via Web Share API or clipboard
-- **Dark Mode** - Toggle between light and dark themes with smooth 0.4s transitions
-- **Admin Authentication** - Secure session-based admin panel
-- **Image Uploads** - Support for both file uploads and URL-based images (base64 encoding)
-- **Interactive Animations** - Category-specific animations (Matrix, books, bubbles, hearts)
-- **Responsive Design** - Professional mobile optimization with touch targets, horizontal scroll nav, and safe area insets
-- **Glassmorphism UI** - Modern glass-like effects throughout
+- **Message Editing** - Edit messages within 5 minutes of posting with countdown timer
+- **Edit History Tracking** - Complete audit trail of all message modifications
+- **Edited Badge** - Visual indicator showing when messages have been modified
+- **Image Support** - Upload images via file input or paste image URLs
+- **Base64 Encoding** - Efficient serverless-compatible image storage
+- **Character Limit** - 500 character limit for focused, concise messages
+- **Message Deletion** - Admin-only deletion with complete cleanup of associated data
+
+#### 🏷️ Category System
+- **4 Unique Categories** with custom animations:
+  - 🕵️ **Whistleblower** - Matrix rain animation (1.5-2.5s)
+  - 📚 **Knowledge** - Floating books animation (1-2s)
+  - 💭 **Thoughts** - Thought bubbles animation (0.8-1.5s)
+  - 🤫 **Confessions** - Floating hearts animation (0.8-1.5s)
+- **Category Filtering** - View all messages or filter by specific category
+- **Auto-navigation** - Automatically jumps to "All" section after posting
+- **Category Badges** - Color-coded badges for easy identification
+
+### Engagement Features
+
+#### 💖 Reactions & Interactions
+- **Like System** - Traditional like/unlike functionality with heart icons
+- **Like Counter** - Real-time like count display
+- **LocalStorage Tracking** - Persistent like tracking across sessions
+- **5 Emoji Reactions** - Express sentiment beyond simple likes:
+  - 😂 Laughing
+  - 😢 Sad
+  - 😍 Love
+  - 🔥 Fire/Hot
+  - 👏 Applause
+- **Reaction Counters** - Live count for each emoji reaction type
+- **Visual Feedback** - Highlighted reactions with gradient backgrounds
+
+#### 💬 Comment System
+- **Nested Comments** - Full conversation threads on each message
+- **Real-time Updates** - See new comments instantly via WebSocket
+- **Comment Timestamps** - Relative time display (Just now, 5m ago, etc.)
+- **200 Character Limit** - Focused, concise comment replies
+- **Collapsible Sections** - Show/hide comments to reduce clutter
+- **Loading States** - Smooth loading experience while fetching comments
+
+#### 🔗 Sharing & Discovery
+- **Share Feature** - Native Web Share API integration
+- **Clipboard Fallback** - Automatic fallback if Web Share unavailable
+- **Search Functionality** - Real-time search across all messages and categories
+- **Message Filtering** - Filter by text content or category name
+- **Report System** - Flag inappropriate content with reason selection
+
+### Real-time Features (Socket.io)
+
+#### ⚡ Live Updates
+- **Instant Message Display** - New messages appear for all users immediately
+- **Live Like Updates** - Like counts sync across all connected clients
+- **Real-time Reactions** - Emoji reactions update instantly
+- **Live Comments** - New comments appear without refresh
+- **Message Edit Sync** - Edits propagate to all viewers in real-time
+- **Message Deletion Sync** - Deleted messages removed from all screens
+- **Active Users Counter** - See how many users are currently online
+- **Pulsing Indicator** - Animated green dot showing live connection
+
+### UI/UX Features
+
+#### 🎨 Design & Theming
+- **Dark Mode** - Smooth theme toggle with 0.4s cubic-bezier transitions
+- **Theme Persistence** - LocalStorage saves user preference
+- **Apple-Inspired Design** - Clean, modern aesthetic with glassmorphism
+- **Glassmorphism Effects** - Backdrop blur and translucent surfaces
+- **Custom Color Palette** - Distinct colors for each category
+- **System Font Stack** - Native fonts (SF Pro, Segoe UI, Roboto)
+- **Smooth Animations** - Optimized timing for all section animations
+
+#### 📱 Mobile Optimization
+- **Mobile-First Design** - Built specifically for mobile browsers
+- **Full-Width Post Button** - Bottom-fixed "Post Message" button (64px tall)
+- **Touch Targets** - Minimum 44px touch targets on all interactive elements
+- **Card Layout** - Vertical stacking for easy mobile scrolling
+- **Horizontal Nav Scroll** - Smooth touch scrolling for category navigation
+- **Safe Area Support** - Proper handling of notched devices and home indicators
+- **Theme Color Meta Tags** - Browser chrome matches app theme
+- **Viewport Optimization** - viewport-fit=cover for edge-to-edge display
+- **Hidden Scrollbars** - Clean, distraction-free scrolling
+- **Active State Feedback** - Scale animations on tap for visual confirmation
+- **Progressive Web App Ready** - mobile-web-app-capable meta tags
+
+#### 🖥️ Desktop Features
+- **Floating Action Button** - Sticky side-positioned post button
+- **Custom Cursor** - Animated cursor with dot and shadow (desktop only)
+- **Hover Effects** - 3D tilt, scale, and shadow animations
+- **Grid Layout** - Auto-adjusting masonry-style message grid
+- **Draggable Cards** - Click and drag message cards (desktop only)
+
+### Admin Features
+
+#### 🔐 Administration
+- **Session-based Auth** - Secure admin login/logout system
+- **Admin Panel** - Dedicated interface for moderation
+- **Message Deletion** - Remove inappropriate content
+- **Report Viewing** - Access all reported messages
+- **Admin Toggle** - Lock icon in navbar for quick access
+
+### Technical Features
+
+#### 🚀 Performance & Architecture
+- **Vercel Deployment** - Serverless architecture on Vercel
+- **Vercel Analytics** - Built-in page view and performance tracking
+- **In-Memory Storage** - Fast message retrieval (development mode)
+- **Express.js Backend** - Lightweight, efficient server
+- **Socket.io Integration** - WebSocket for real-time bidirectional communication
+- **Multer Integration** - Efficient file upload handling
+- **Error Monitoring** - Rollbar integration for error tracking
+- **CORS Support** - Proper cross-origin configuration
+
+#### 🔧 Developer Experience
+- **No Build Step** - Vanilla JavaScript, no framework compilation
+- **Hot Reload** - Instant updates during development
+- **Clean Code Structure** - Organized, maintainable codebase
+- **API Documentation** - Well-documented REST endpoints
+- **Modular CSS** - Organized styles with CSS custom properties
 
 ## 🚀 Quick Start
 
