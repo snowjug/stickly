@@ -84,7 +84,7 @@ app.post('/api/admin/check', (req, res) => {
 
 // Post a new message with optional image
 app.post('/api/messages', upload.single('image'), (req, res) => {
-    const { message, category, imageUrl } = req.body;
+    const { message, category, imageUrl, username, avatar } = req.body;
     
     // Allow posting if either message, file, or URL is present
     if ((!message || message.trim() === '') && !req.file && (!imageUrl || !imageUrl.trim())) {
@@ -111,7 +111,9 @@ app.post('/api/messages', upload.single('image'), (req, res) => {
         category: messageCategory,
         timestamp: new Date().toISOString(),
         image: imageDataUrl,
-        likes: 0
+        likes: 0,
+        username: username || 'Anonymous',
+        avatar: avatar || '👤'
     };
     
     messages.unshift(newMessage); // Add to beginning of array

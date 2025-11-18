@@ -20,7 +20,7 @@
     
     <!-- Navigation Bar -->
     <nav class="navbar">
-        <div class="nav-brand">
+        <div class="nav-brand" onclick="showAdminLogin()" style="cursor: pointer;" title="Admin Access">
             <span class="logo">💬</span>
             <div>
                 <h1>Stickly</h1>
@@ -40,14 +40,14 @@
         <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle dark mode">
             <span id="darkModeIcon">🌙</span>
         </button>
-        <button class="admin-toggle" id="adminBtn" onclick="toggleAdminModal()" title="Admin login">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        <button class="profile-toggle" id="profileBtn" onclick="toggleProfileModal()" title="Profile Settings">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="10" r="3"></circle><path d="M6.168 18.849A4 4 0 0 1 10 16h4a4 4 0 0 1 3.834 2.855"></path></svg>
         </button>
     </nav>
 
     <!-- Floating Action Button -->
     <button class="fab" onclick="toggleModal()">
-        <span class="fab-icon">✍️</span>
+        <span class="fab-icon">+</span>
         <span class="fab-label">Post Message</span>
     </button>
 
@@ -142,6 +142,49 @@
                 <div id="adminPanel" style="display: none;">
                     <p style="text-align: center; color: var(--text-color); margin-bottom: 1rem;">✅ Logged in as Admin</p>
                     <button class="post-btn" onclick="adminLogout()" style="width: 100%; background: #ff4444;">Logout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Settings Modal -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>👤 Profile Settings</h2>
+                <button class="close-btn" onclick="toggleProfileModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.75rem; color: var(--text-color); font-weight: 600; font-size: 1rem;">Username</label>
+                    <div style="position: relative;">
+                        <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--accent-color); font-weight: 700; font-size: 1.1rem; z-index: 1;">@</span>
+                        <input type="text" id="usernameInput" class="admin-input" placeholder="username" maxlength="20" value="" style="padding-left: 2.5rem;">
+                    </div>
+                    <small style="display: block; margin-top: 0.5rem; color: var(--subtle-text-color); font-size: 0.85rem;">✨ Max 20 characters • No spaces allowed</small>
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.75rem; color: var(--text-color); font-weight: 600; font-size: 1rem;">Choose Your Avatar</label>
+                    <div id="avatarGrid" class="avatar-grid">
+                        <!-- Avatars will be generated here -->
+                    </div>
+                    <button class="secondary-btn" onclick="regenerateAvatars()" style="width: 100%; margin-top: 1rem;">
+                        🎲 Shuffle Avatars
+                    </button>
+                </div>
+                
+                <div style="margin-bottom: 1.5rem; padding: 1.25rem; background: linear-gradient(135deg, rgba(0,113,227,0.08), rgba(10,132,255,0.08)); border-radius: 12px; border: 2px solid rgba(0,113,227,0.2); box-shadow: 0 4px 12px rgba(0,113,227,0.1);">
+                    <p style="margin: 0 0 0.75rem 0; color: var(--text-color); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7;">Preview</p>
+                    <div id="profilePreview" style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span class="message-avatar">👤</span>
+                        <span style="font-weight: 700; font-size: 1.05rem; color: var(--text-color); display: flex; align-items: center;"><span style="color: var(--accent-color); margin-right: 2px;">@</span>Anonymous</span>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 0.75rem;">
+                    <button class="post-btn" onclick="saveUserProfile()" style="flex: 1;">💾 Save Profile</button>
+                    <button class="cancel-btn" onclick="toggleProfileModal()" style="flex: 1;">Cancel</button>
                 </div>
             </div>
         </div>
@@ -289,6 +332,106 @@
                 console.error('Error logging out:', error);
             }
         }
+
+        // Profile functions
+        const AVATAR_EMOJIS = ['😀', '😎', '🤓', '😺', '🐶', '🦊', '🐼', '🦁', '🐸', '🦄', '🌟', '⚡', '🔥', '💎', '🎨', '🎭', '🎪', '🎯', '🎲', '🎸', '🚀', '🌈', '🌸', '🍕', '🍔', '🍩', '🎂', '☕', '🌍', '🏆'];
+
+        function getUserProfile() {
+            const username = localStorage.getItem('userUsername') || 'Anonymous';
+            const avatar = localStorage.getItem('userAvatar') || '👤';
+            return { username, avatar };
+        }
+
+        function showAdminLogin() {
+            toggleAdminModal();
+        }
+
+        function toggleProfileModal() {
+            const modal = document.getElementById('profileModal');
+            modal.classList.toggle('show');
+            
+            if (modal.classList.contains('show')) {
+                const profile = getUserProfile();
+                document.getElementById('usernameInput').value = profile.username === 'Anonymous' ? '' : profile.username;
+                generateAvatars(profile.avatar);
+                updateProfilePreview();
+            }
+        }
+
+        function generateAvatars(selectedAvatar = null) {
+            const avatarGrid = document.getElementById('avatarGrid');
+            const shuffled = [...AVATAR_EMOJIS].sort(() => Math.random() - 0.5);
+            const avatars = shuffled.slice(0, 12);
+            
+            // If there's a selected avatar, make sure it's in the grid
+            if (selectedAvatar && !avatars.includes(selectedAvatar)) {
+                avatars[0] = selectedAvatar;
+            }
+            
+            avatarGrid.innerHTML = avatars.map(emoji => `
+                <div class="avatar-option ${emoji === selectedAvatar ? 'selected' : ''}" 
+                     data-avatar="${emoji}" 
+                     onclick="selectAvatar('${emoji}')">
+                    ${emoji}
+                </div>
+            `).join('');
+        }
+
+        function regenerateAvatars() {
+            const profile = getUserProfile();
+            generateAvatars(profile.avatar);
+        }
+
+        function selectAvatar(emoji) {
+            document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
+            event.target.classList.add('selected');
+            updateProfilePreview();
+        }
+
+        function updateProfilePreview() {
+            let username = document.getElementById('usernameInput').value.trim().replace(/\s+/g, '') || 'Anonymous';
+            const selectedAvatar = document.querySelector('.avatar-option.selected');
+            const avatar = selectedAvatar ? selectedAvatar.dataset.avatar : '👤';
+            
+            document.getElementById('profilePreview').innerHTML = `
+                <span class="message-avatar">${avatar}</span>
+                <span style="font-weight: 700; font-size: 1.05rem; color: var(--text-color); display: flex; align-items: center;"><span style="color: var(--accent-color); margin-right: 2px;">@</span>${username}</span>
+            `;
+        }
+
+        function saveUserProfile() {
+            let username = document.getElementById('usernameInput').value.trim().replace(/\s+/g, '') || 'Anonymous';
+            const selectedAvatar = document.querySelector('.avatar-option.selected');
+            const avatar = selectedAvatar ? selectedAvatar.dataset.avatar : '👤';
+            
+            // Remove any @ symbols user might have typed
+            username = username.replace(/@/g, '');
+            
+            localStorage.setItem('userUsername', username);
+            localStorage.setItem('userAvatar', avatar);
+            
+            // Show success animation
+            const modal = document.getElementById('profileModal');
+            const modalContent = modal.querySelector('.modal-content');
+            modalContent.style.animation = 'pulse 0.3s ease';
+            
+            setTimeout(() => {
+                toggleProfileModal();
+                modalContent.style.animation = '';
+            }, 300);
+        }
+
+        // Update username input live preview
+        document.addEventListener('DOMContentLoaded', () => {
+            const usernameInput = document.getElementById('usernameInput');
+            if (usernameInput) {
+                usernameInput.addEventListener('input', (e) => {
+                    // Remove spaces and @ symbols as user types
+                    e.target.value = e.target.value.replace(/[\s@]/g, '');
+                    updateProfilePreview();
+                });
+            }
+        });
 
         // Image upload preview
         function initImageUpload() {
@@ -500,6 +643,11 @@
                 formData.append('message', messageText || '');
                 formData.append('category', selectedCategory);
                 
+                // Get user profile and add to message
+                const profile = getUserProfile();
+                formData.append('username', profile.username);
+                formData.append('avatar', profile.avatar);
+                
                 if (imageUpload && imageUpload.files[0]) {
                     console.log('Uploading image:', imageUpload.files[0].name);
                     formData.append('image', imageUpload.files[0]);
@@ -590,9 +738,18 @@
                 const isLiked = likedMessages.includes(msg.id);
                 const likesCount = msg.likes || 0;
                 
+                const username = msg.username || 'Anonymous';
+                const avatar = msg.avatar || '👤';
+                
                 card.innerHTML = `
                     <div class="message-header">
-                        <span class="category-badge">${categoryEmojis[msg.category]} ${msg.category}</span>
+                        <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1;">
+                            <span class="message-avatar">${avatar}</span>
+                            <div style="display: flex; flex-direction: column;">
+                                <span class="message-username">${escapeHtml(username)}</span>
+                                <span class="category-badge" style="margin-top: 0.25rem;">${categoryEmojis[msg.category]} ${msg.category}</span>
+                            </div>
+                        </div>
                         <div class="message-actions">
                             <span class="message-time">${timeAgo}</span>
                             <button class="delete-btn" onclick="deleteMessage(${msg.id})" title="Delete message">×</button>
