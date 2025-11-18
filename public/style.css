@@ -211,6 +211,11 @@ body {
     align-items: center;
     gap: 0.5rem;
     flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.profile-toggle svg {
+    flex-shrink: 0;
 }
 
 .profile-toggle:hover {
@@ -1379,8 +1384,9 @@ body,
         gap: 0.75rem;
         position: sticky;
         top: 0;
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto auto auto;
         grid-template-areas:
             "brand actions"
             "nav nav"
@@ -1400,11 +1406,28 @@ body,
         font-size: 0.65rem;
     }
 
-    .dark-mode-toggle,
-    .admin-toggle {
+    .navbar > .dark-mode-toggle,
+    .navbar > .profile-toggle,
+    .navbar > .admin-toggle {
         grid-area: actions;
         padding: 0.5rem 0.75rem;
         font-size: 1rem;
+        margin: 0;
+    }
+
+    .dark-mode-toggle,
+    .profile-toggle {
+        padding: 0.5rem !important;
+        min-width: 40px;
+    }
+
+    .profile-toggle {
+        justify-self: end;
+        white-space: nowrap;
+    }
+
+    .dark-mode-toggle {
+        margin-right: 0.5rem;
     }
 
     .active-users-container {
@@ -1563,10 +1586,11 @@ body,
         border-radius: 0 !important;
         font-size: 1.125rem;
         box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.75rem;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex-direction: row !important;
+        gap: 0.5rem !important;
         padding: 0 !important;
         margin: 0 !important;
         z-index: 1000;
@@ -1586,17 +1610,22 @@ body,
     }
 
     .fab-label {
-        display: inline-block;
-        font-size: 1.125rem;
-        font-weight: 700;
-        opacity: 1;
-        max-width: none;
+        display: inline-block !important;
+        font-size: 1.125rem !important;
+        font-weight: 700 !important;
+        opacity: 1 !important;
+        max-width: none !important;
         letter-spacing: 0.3px;
+        line-height: 1 !important;
     }
     
     .fab-icon {
-        font-size: 1.5rem;
-        display: inline-block;
+        font-size: 2rem !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        line-height: 1 !important;
+        margin: 0 !important;
     }
 
     .fab.collapsed {
