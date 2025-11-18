@@ -392,6 +392,17 @@ body.dark-mode .fab:hover {
     animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Hide scrollbar for modal */
+.modal-content::-webkit-scrollbar {
+    width: 0;
+    display: none;
+}
+
+.modal-content {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
 @keyframes slideUp {
     from { transform: translateY(30px) scale(0.98); opacity: 0; }
     to { transform: translateY(0) scale(1); opacity: 1; }
@@ -701,6 +712,13 @@ body.dark-mode #messageInput:focus {
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.main-container::-webkit-scrollbar {
+    width: 0;
+    display: none;
 }
 
 .section-header {
@@ -1411,6 +1429,13 @@ body,
         border-radius: 16px;
         margin: 1rem;
         overflow-y: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .modal-content::-webkit-scrollbar {
+        width: 0;
+        display: none;
     }
 
     .modal-header {
