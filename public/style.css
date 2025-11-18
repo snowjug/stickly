@@ -1146,6 +1146,7 @@ body.dark-mode .message-card:hover::before {
 @media (max-width: 768px) {
     body {
         cursor: auto;
+        -webkit-tap-highlight-color: transparent;
     }
 
     .cursor-dot {
@@ -1153,14 +1154,18 @@ body.dark-mode .message-card:hover::before {
     }
 
     .navbar {
-        padding: 0.75rem 1rem;
-        flex-direction: column;
-        gap: 0.75rem;
+        padding: 1rem;
+        gap: 1rem;
+        position: sticky;
+        top: 0;
     }
 
     .nav-brand {
-        width: 100%;
-        justify-content: center;
+        justify-content: flex-start;
+    }
+
+    .nav-brand h1 {
+        font-size: 1.1rem;
     }
 
     .tagline {
@@ -1169,36 +1174,51 @@ body.dark-mode .message-card:hover::before {
 
     .nav-links {
         width: 100%;
-        justify-content: center;
-        gap: 0.3rem;
+        overflow-x: auto;
+        overflow-y: hidden;
+        gap: 0.5rem;
+        justify-content: flex-start;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        padding-bottom: 0.25rem;
+    }
+
+    .nav-links::-webkit-scrollbar {
+        display: none;
     }
 
     .nav-btn {
-        padding: 0.5rem 0.6rem;
-        font-size: 0.75rem;
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        flex-shrink: 0;
+        min-width: fit-content;
     }
 
-    .dark-mode-toggle {
-        padding: 0.4rem 0.8rem;
-        font-size: 1rem;
+    .dark-mode-toggle,
+    .admin-toggle {
+        padding: 0.5rem 0.9rem;
+        font-size: 1.1rem;
+        flex-shrink: 0;
     }
 
     .section-header h2 {
-        font-size: 1.8rem;
+        font-size: 2rem;
     }
 
     .section-header p {
         font-size: 1rem;
+        padding: 0 1rem;
     }
 
     .main-container {
         padding: 2rem 1rem;
-        height: auto;
-        min-height: calc(100vh - 140px);
+        min-height: calc(100vh - 80px);
     }
 
     #messagesList {
-        overflow-y: auto;
+        overflow-y: visible;
         -webkit-overflow-scrolling: touch;
     }
 
@@ -1209,10 +1229,17 @@ body.dark-mode .message-card:hover::before {
         top: 0 !important;
         margin-bottom: 1.5rem;
         cursor: auto;
+        touch-action: manipulation;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     }
 
     .message-card:hover {
         transform: none;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .message-card:active {
+        transform: scale(0.98);
     }
 
     .delete-btn {
@@ -1223,51 +1250,62 @@ body.dark-mode .message-card:hover::before {
     }
 
     .fab {
-        bottom: 1rem;
-        right: 1rem;
-        height: 48px;
-        min-width: 48px;
-        font-size: 1.2rem;
-        width: 48px;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        height: 56px;
+        min-width: 56px;
+        width: 56px;
+        font-size: 1.5rem;
         border-radius: 50%;
-        transform: none;
-    }
-
-    .fab:hover {
-        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 
     .fab:active {
-        transform: scale(0.95);
+        transform: scale(0.9);
     }
 
     .fab-label {
         display: none;
     }
 
-    .footer {
-        bottom: 5rem;
+    .fab.collapsed {
+        width: 56px;
+    }
+
+    .message-image {
+        max-height: 250px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .image-modal img {
+        max-width: 95%;
+        max-height: 85vh;
+    }
+
+    .image-modal-close {
+        top: 1rem;
         right: 1rem;
-        padding: 0.75rem 1rem;
-        font-size: 0.7rem;
-    }
-
-    .bottom-quote {
-        padding: 1rem;
-    }
-
-    .bottom-quote p {
-        font-size: 0.8rem;
-    }
-
+        width: 44px;
     .modal-content {
         width: 95%;
-        max-height: 85vh;
-        border-radius: 12px;
+        max-width: 500px;
+        max-height: 90vh;
+        border-radius: 16px;
+        margin: 1rem;
+        overflow-y: auto;
+    }
+
+    .modal-header {
+        padding: 1.25rem 1rem;
     }
 
     .modal-header h2 {
-        font-size: 1.3rem;
+        font-size: 1.4rem;
+    }
+
+    .modal-body {
+        padding: 1rem;
     }
 
     .category-buttons {
@@ -1276,49 +1314,131 @@ body.dark-mode .message-card:hover::before {
     }
 
     .category-btn {
-        padding: 0.8rem;
+        padding: 1rem 0.75rem;
+        min-height: 70px;
     }
 
     .category-btn .emoji {
-        font-size: 1.3rem;
+        font-size: 1.5rem;
     }
 
     .category-btn span:last-child {
-        font-size: 0.8rem;
+        font-size: 0.85rem;
     }
 
     #messageInput {
         min-height: 120px;
+        font-size: 1rem;
+        padding: 1rem;
+    }
+
+    .image-upload-label {
+        padding: 0.9rem 1.25rem;
         font-size: 0.95rem;
     }
 
-    .form-footer {
-        flex-direction: column;
-        gap: 0.5rem;
-        align-items: stretch;
+    .admin-input,
+    #imageUrl {
+        padding: 1rem;
+        font-size: 1rem;
+    }
+    /* Hide animations on mobile for better performance */
+    .confetti,
+    .matrix-char,
+    .sparkle,
+    .floating-book,
+    .thought-bubble,
+    .floating-heart {
+        display: none !important;
     }
 
-    .post-btn {
-        width: 100%;
-        padding: 0.9rem;
+    .post-btn,
+    .submit-btn,
+    .cancel-btn {
+        padding: 1rem 1.5rem;
+        font-size: 1rem;
+        min-height: 48px;
     }
 
-    .message-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
+    .admin-toggle svg {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+/* Tablet responsiveness */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .navbar {
+        padding: 1rem 2rem;
     }
 
-    .message-actions {
-        width: 100%;
-        justify-content: space-between;
+    .main-container {
+        padding: 3rem 2rem;
     }
 
-    .message-text {
-        font-size: 0.95rem;
+    .category-buttons {
+        grid-template-columns: repeat(3, 1fr);
     }
 
-    .confetti {
-        display: none;
+    .modal-content {
+        max-width: 600px;
+    }
+}
+
+/* Landscape mode optimization for phones */
+@media (max-width: 768px) and (orientation: landscape) {
+    .modal-content {
+        max-height: 95vh;
+        width: 85%;
+    }
+
+    .navbar {
+        padding: 0.5rem 1rem;
+    }
+
+    .nav-brand h1 {
+        font-size: 1rem;
+    }
+
+    .section-header h2 {
+        font-size: 1.5rem;
+    }
+
+    .main-container {
+        padding: 1.5rem 1rem;
+    }
+}
+
+/* Reduce motion for accessibility and performance */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    .confetti,
+    .matrix-char,
+    .sparkle,
+    .floating-book,
+    .thought-bubble,
+    .floating-heart {
+        display: none !important;
+    }
+}
+
+/* Safe area support for notched devices */
+@supports (padding: env(safe-area-inset-top)) {
+    .navbar {
+        padding-top: max(1rem, env(safe-area-inset-top));
+        padding-left: max(1rem, env(safe-area-inset-left));
+        padding-right: max(1rem, env(safe-area-inset-right));
+    }
+
+    .fab {
+        bottom: max(1.5rem, calc(env(safe-area-inset-bottom) + 1rem));
+        right: max(1.5rem, calc(env(safe-area-inset-right) + 0.5rem));
     }
 }

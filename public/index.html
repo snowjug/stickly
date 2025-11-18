@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Stickly - Share Your Thoughts Anonymously</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -495,7 +498,9 @@
                     updateCharCount();
                     toggleModal();
                     createConfetti();
-                    loadMessages();
+                    
+                    // Auto jump to "All" section to see the new post
+                    switchSection('all');
                 } else {
                     const error = await response.json();
                     console.error('Error response:', error);
@@ -604,7 +609,7 @@
                     matrixChar.style.left = Math.random() * 100 + '%';
                     matrixChar.style.top = '-20px';
                     
-                    const duration = Math.random() * 2 + 3; // 3-5 seconds
+                    const duration = Math.random() * 1 + 1.5; // 1.5-2.5 seconds
                     matrixChar.style.animationDuration = duration + 's';
                     
                     document.body.appendChild(matrixChar);
@@ -629,7 +634,7 @@
                     sparkle.style.top = Math.random() * 100 + '%';
                     sparkle.style.fontSize = (Math.random() * 20 + 15) + 'px';
                     
-                    const duration = Math.random() * 2 + 2;
+                    const duration = Math.random() * 1 + 1;
                     sparkle.style.animationDuration = duration + 's';
                     
                     document.body.appendChild(sparkle);
@@ -651,7 +656,7 @@
                     book.style.left = Math.random() * 100 + '%';
                     book.style.bottom = '-50px';
                     
-                    const duration = Math.random() * 3 + 4;
+                    const duration = Math.random() * 1.5 + 2;
                     book.style.animationDuration = duration + 's';
                     
                     document.body.appendChild(book);
@@ -674,7 +679,7 @@
                     bubble.style.left = Math.random() * 100 + '%';
                     bubble.style.bottom = '-50px';
                     
-                    const duration = Math.random() * 3 + 3;
+                    const duration = Math.random() * 1.5 + 1.5;
                     bubble.style.animationDuration = duration + 's';
                     
                     document.body.appendChild(bubble);
@@ -696,7 +701,7 @@
                     heart.style.left = Math.random() * 100 + '%';
                     heart.style.bottom = '-50px';
                     
-                    const duration = Math.random() * 2 + 3;
+                    const duration = Math.random() * 1 + 1.5;
                     heart.style.animationDuration = duration + 's';
                     
                     document.body.appendChild(heart);
