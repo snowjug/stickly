@@ -18,10 +18,11 @@
     
     /* Category Colors */
     --color-inspiration: #FF6B6B;
-    --color-knowledge: #4ECDC4;
+    --color-controversy: #FF9F43;
     --color-thoughts: #95E1D3;
     --color-confessions: #F38181;
     --color-whistleblower: #00FF41;
+    --color-others: #A29BFE;
 }
 
 body.dark-mode {
@@ -130,11 +131,11 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
-    display: grid;
-    grid-template-columns: auto 1fr auto auto auto;
+    display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 1.5rem;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-wrap: wrap;
 }
 
 .nav-brand {
@@ -142,6 +143,22 @@ body {
     align-items: center;
     gap: 0.75rem;
     flex-shrink: 0;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.navbar > div[style*="actions"] {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+    margin-left: auto;
 }
 
 .logo {
@@ -216,6 +233,7 @@ body {
 
 .profile-toggle svg {
     flex-shrink: 0;
+    stroke: var(--text-color);
 }
 
 .profile-toggle:hover {
@@ -259,17 +277,10 @@ body {
     box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.1);
 }
 
-.nav-links {
+.search-container {
     display: flex;
-    gap: 0.5rem;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    padding: 0.25rem 0;
-}
-
-.nav-links::-webkit-scrollbar {
-    display: none;
+    align-items: center;
+    flex-shrink: 0;
 }
 
 .nav-btn {
@@ -1060,7 +1071,7 @@ body.dark-mode .message-card:hover::before {
     }
 }
 
-/* Floating Books for Knowledge */
+/* Floating Sparks for Controversy */
 .floating-book {
     position: fixed;
     font-size: 30px;
@@ -1113,29 +1124,79 @@ body.dark-mode .message-card:hover::before {
     }
 }
 
-/* Hearts for Confessions */
-.floating-heart {
+/* Lightning Bolts for Controversy */
+.floating-lightning {
     position: fixed;
-    font-size: 25px;
+    font-size: 35px;
     pointer-events: none;
     z-index: 9999;
-    animation: heart-rise linear forwards;
+    animation: lightning-strike linear forwards;
+    filter: drop-shadow(0 0 8px rgba(255, 159, 67, 0.8));
 }
 
-@keyframes heart-rise {
+@keyframes lightning-strike {
     0% {
         opacity: 0;
-        transform: translateY(0) scale(1);
+        transform: translateY(-20px) translateX(0) rotate(0deg) scale(0.5);
+    }
+    5% {
+        opacity: 1;
+        transform: translateY(0) translateX(0) rotate(-15deg) scale(1.2);
     }
     10% {
-        opacity: 1;
+        opacity: 0.7;
+        transform: translateY(10px) translateX(5px) rotate(15deg) scale(1);
     }
-    50% {
-        transform: translateY(-50vh) scale(1.2);
+    15% {
+        opacity: 1;
+        transform: translateY(20px) translateX(-5px) rotate(-10deg) scale(1.1);
+    }
+    30% {
+        opacity: 1;
+        transform: translateY(-30vh) translateX(15px) rotate(20deg) scale(1);
+    }
+    60% {
+        opacity: 0.8;
+        transform: translateY(-60vh) translateX(-20px) rotate(-25deg) scale(0.9);
     }
     100% {
         opacity: 0;
-        transform: translateY(-100vh) scale(0.8);
+        transform: translateY(-100vh) translateX(30px) rotate(45deg) scale(0.3);
+    }
+}
+
+/* Whisper Bubbles for Confessions */
+/* Whisper Bubbles for Confessions */
+.floating-heart {
+    position: fixed;
+    font-size: 20px;
+    pointer-events: none;
+    z-index: 9999;
+    animation: whisper-float linear forwards;
+    opacity: 0.7;
+}
+
+@keyframes whisper-float {
+    0% {
+        opacity: 0;
+        transform: translateY(0) translateX(0) scale(0.3);
+    }
+    10% {
+        opacity: 0.8;
+    }
+    25% {
+        transform: translateY(-25vh) translateX(-15px) scale(0.8);
+    }
+    50% {
+        opacity: 0.6;
+        transform: translateY(-50vh) translateX(20px) scale(1.1);
+    }
+    75% {
+        transform: translateY(-75vh) translateX(-10px) scale(0.7);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-100vh) translateX(15px) scale(0.4);
     }
 }
 
@@ -1144,8 +1205,8 @@ body.dark-mode .message-card:hover::before {
     --card-accent: var(--color-inspiration);
 }
 
-.message-card[data-category="knowledge"] {
-    --card-accent: var(--color-knowledge);
+.message-card[data-category="controversy"] {
+    --card-accent: var(--color-controversy);
 }
 
 .message-card[data-category="thoughts"] {
@@ -1158,6 +1219,10 @@ body.dark-mode .message-card:hover::before {
 
 .message-card[data-category="whistleblower"] {
     --card-accent: var(--color-whistleblower);
+}
+
+.message-card[data-category="others"] {
+    --card-accent: var(--color-others);
 }
 
 .message-header {
@@ -1384,13 +1449,14 @@ body,
         gap: 0.75rem;
         position: sticky;
         top: 0;
-        display: grid;
+        display: grid !important;
         grid-template-columns: 1fr auto;
         grid-template-rows: auto auto auto;
         grid-template-areas:
             "brand actions"
-            "nav nav"
-            "search search";
+            "search search"
+            "nav nav";
+        flex-wrap: nowrap;
     }
 
     .nav-brand {
@@ -1406,28 +1472,18 @@ body,
         font-size: 0.65rem;
     }
 
-    .navbar > .dark-mode-toggle,
-    .navbar > .profile-toggle,
-    .navbar > .admin-toggle {
-        grid-area: actions;
-        padding: 0.5rem 0.75rem;
-        font-size: 1rem;
-        margin: 0;
+    .navbar > div[style*="actions"] {
+        grid-area: actions !important;
+        gap: 0.5rem !important;
+        flex-wrap: nowrap !important;
+        margin-left: 0 !important;
     }
 
     .dark-mode-toggle,
     .profile-toggle {
         padding: 0.5rem !important;
         min-width: 40px;
-    }
-
-    .profile-toggle {
-        justify-self: end;
-        white-space: nowrap;
-    }
-
-    .dark-mode-toggle {
-        margin-right: 0.5rem;
+        flex-shrink: 0;
     }
 
     .active-users-container {
@@ -1437,7 +1493,7 @@ body,
     }
 
     .nav-links {
-        grid-area: nav;
+        grid-area: nav !important;
         width: 100%;
         overflow-x: auto;
         overflow-y: hidden;
@@ -1448,6 +1504,8 @@ body,
         -ms-overflow-style: none;
         padding: 0.5rem 0;
         margin: 0.25rem 0;
+        flex: none !important;
+        display: flex !important;
     }
 
     .nav-links::-webkit-scrollbar {
@@ -1465,10 +1523,11 @@ body,
     }
 
     .search-container {
-        grid-area: search;
+        grid-area: search !important;
         width: 100%;
         max-width: 100%;
-        margin: 0.5rem 0 0.25rem;
+        margin: 0.5rem 0 0.25rem !important;
+        flex-shrink: 1;
     }
 
     #searchInput {
