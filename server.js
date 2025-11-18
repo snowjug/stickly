@@ -240,7 +240,12 @@ app.get('/api/messages/counts', (req, res) => {
     res.json(counts);
 });
 
-// Start server
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
+// Export for Vercel serverless
+module.exports = app;
+
+// Start server locally
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Server is running on http://localhost:${PORT}`);
+    });
+}
