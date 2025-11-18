@@ -28,11 +28,26 @@
             </div>
         </div>
         <div class="nav-links">
-            <button class="nav-btn active" data-section="all" onclick="switchSection('all')">All</button>
-            <button class="nav-btn" data-section="whistleblower" onclick="switchSection('whistleblower')">🔓 Whistleblower</button>
-            <button class="nav-btn" data-section="controversy" onclick="switchSection('controversy')">Controversy</button>
-            <button class="nav-btn" data-section="thoughts" onclick="switchSection('thoughts')">Thoughts</button>
-            <button class="nav-btn" data-section="confessions" onclick="switchSection('confessions')">Confessions</button>
+            <button class="nav-btn active" data-section="all" onclick="switchSection('all')">
+                <span class="nav-emoji">📥</span>
+                <span class="nav-label">All</span>
+            </button>
+            <button class="nav-btn" data-section="whistleblower" onclick="switchSection('whistleblower')">
+                <span class="nav-emoji">🔓</span>
+                <span class="nav-label">Whistleblower</span>
+            </button>
+            <button class="nav-btn" data-section="controversy" onclick="switchSection('controversy')">
+                <span class="nav-emoji">⚡</span>
+                <span class="nav-label">Controversy</span>
+            </button>
+            <button class="nav-btn" data-section="thoughts" onclick="switchSection('thoughts')">
+                <span class="nav-emoji">💭</span>
+                <span class="nav-label">Thoughts</span>
+            </button>
+            <button class="nav-btn" data-section="confessions" onclick="switchSection('confessions')">
+                <span class="nav-emoji">🤫</span>
+                <span class="nav-label">Confessions</span>
+            </button>
         </div>
         <div style="grid-area: actions; display: flex; gap: 0.75rem; align-items: center; justify-content: flex-end; flex-wrap: nowrap;">
             <div class="search-container" style="margin: 0;">
@@ -721,9 +736,10 @@
 
             const categoryEmojis = {
                 'whistleblower': '🔓',
-                'knowledge': '📚',
+                'controversy': '⚡',
                 'thoughts': '💭',
-                'confessions': '🤫'
+                'confessions': '🤫',
+                'others': '📌'
             };
 
             const fragment = document.createDocumentFragment();
