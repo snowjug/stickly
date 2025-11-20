@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stickly-deployment
+  namespace: stickly
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stickly
+  template:
+    metadata:
+      labels:
+        app: stickly
+    spec:
+      containers:
+        - name: stickly
+          image: isnowman/stickly-app:9
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: "production"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stickly-service
+  namespace: stickly
+spec:
+  type: NodePort
+  selector:
+    app: stickly
+  ports:
+    - port: 3000        # service port
+      targetPort: 3000  # container port
+      nodePort: 30080   # external port on your machine (NodePort must be 30000–32767)
