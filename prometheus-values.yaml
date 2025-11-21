@@ -1,0 +1,7 @@
+extraScrapeConfigs: |
+  - job_name: 'stickly'
+    metrics_path: /metrics
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'stickly-service.stickly.svc.cluster.local:3000'
