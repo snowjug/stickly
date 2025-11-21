@@ -12,8 +12,8 @@ A modern, feature-rich anonymous message board where users can share their thoug
 
 | Service | Port | Local URL | Description |
 |---------|------|-----------|-------------|
-| **Application** | 3000 | http://localhost:3000 | Main web application |
-| **Prometheus Metrics** | 3000 | http://localhost:3000/metrics | Application metrics endpoint |
+| **Application** | 30080 | http://localhost:30080 | Main web application (NodePort) |
+| **Prometheus Metrics** | 30080 | http://localhost:30080/metrics | Application metrics endpoint |
 | **Prometheus Server** | 9090 | http://localhost:9090 | Prometheus query interface |
 | **Grafana Dashboard** | 3001 | http://localhost:3001 | Metrics visualization |
 | **Jenkins** | 8080 | http://localhost:8080 | CI/CD pipeline |
