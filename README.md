@@ -139,8 +139,11 @@ A modern, feature-rich anonymous message board where users can share their thoug
 
 - Node.js (v14.0.0 or higher)
 - npm (comes with Node.js)
+- Docker (for containerized deployment)
+- Kubernetes cluster (for orchestration)
+- Helm (for Kubernetes package management)
 
-### Installation
+### Local Development
 
 1. **Clone the repository**
 
@@ -167,6 +170,43 @@ A modern, feature-rich anonymous message board where users can share their thoug
    Navigate to http://localhost:3000
    ```
 
+### Docker Deployment
+
+1. **Build Docker image**
+
+   ```bash
+   docker build -t stickly-app .
+   ```
+
+2. **Run container**
+
+   ```bash
+   docker run -p 3000:3000 stickly-app
+   ```
+
+### Kubernetes Deployment
+
+1. **Apply Kubernetes manifests**
+
+   ```bash
+   kubectl apply -f k8s/stickly.yaml
+   ```
+
+2. **Check deployment status**
+
+   ```bash
+   kubectl get pods -n stickly
+   kubectl get svc -n stickly
+   ```
+
+### Prometheus Metrics
+
+Access application metrics at:
+
+```text
+http://localhost:3000/metrics
+```
+
 ## 🛠️ Tech Stack
 
 <div align="center">
@@ -180,10 +220,18 @@ A modern, feature-rich anonymous message board where users can share their thoug
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
 ![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)
 
+### DevOps & Infrastructure
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)
+![Jenkins](https://img.shields.io/badge/Jenkins-D24939?style=for-the-badge&logo=jenkins&logoColor=white)
+![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white)
+![Grafana](https://img.shields.io/badge/Grafana-F46800?style=for-the-badge&logo=grafana&logoColor=white)
+![SonarQube](https://img.shields.io/badge/SonarQube-4E9BCD?style=for-the-badge&logo=sonarqube&logoColor=white)
+![Helm](https://img.shields.io/badge/Helm-0F1689?style=for-the-badge&logo=helm&logoColor=white)
+
 ### Deployment & Tools
 ![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
 ![Git](https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white)
-![Multer](https://img.shields.io/badge/Multer-FF6600?style=for-the-badge&logo=files&logoColor=white)
 
 </div>
 
@@ -220,43 +268,134 @@ A modern, feature-rich anonymous message board where users can share their thoug
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| **Node.js** | ≥14.0.0 | Runtime environment |
+| **Node.js** | ≥14.0.0 (20-alpine in Docker) | Runtime environment |
 | **Express.js** | 4.18.2 | Backend framework |
 | **Multer** | 2.0.2 | File upload handling |
+| **Socket.io** | 4.8.1 | Real-time communication |
+| **prom-client** | Latest | Prometheus metrics |
 | **Vercel Analytics** | 1.5.0 | Analytics tracking |
 | **Rollbar** | 2.26.5 | Error monitoring |
-| **@rollbar/react** | 1.0.0 | React error tracking |
 
-## 🏗️ Architecture Flow
+### DevOps Tools
+
+| Tool | Version | Purpose |
+|------|---------|---------|
+| **Docker** | Latest | Containerization |
+| **Kubernetes** | 1.28+ | Container orchestration |
+| **Jenkins** | Latest | CI/CD automation |
+| **Prometheus** | via Helm chart | Metrics collection |
+| **Grafana** | via Helm chart | Metrics visualization |
+| **SonarQube** | Latest | Code quality analysis |
+| **Helm** | 3.x | Kubernetes package manager |
+
+## 🏗️ Architecture & DevOps Flow
 
 ```mermaid
-graph TD
-    A[Client Browser] -->|HTTP Requests| B[Vercel Edge Network]
-    B -->|Routes Traffic| C[Express.js Server]
-    C -->|Fetch Messages| D[In-Memory Storage]
-    C -->|Upload Images| E[Multer Middleware]
-    E -->|Base64 Encoding| D
-    C -->|Like/Unlike| F[Likes Array]
-    C -->|Report Message| G[Reports Array]
-    D -->|Return Data| C
-    F -->|Return Data| C
-    G -->|Return Data| C
-    C -->|JSON Response| B
-    B -->|Render UI| A
-    A -->|LocalStorage| H[Browser Storage]
-    H -->|Track Likes| A
-    H -->|Dark Mode| A
-    I[Vercel Analytics] -->|Track Pageviews| A
+graph TB
+    subgraph "Development"
+        A[Developer] -->|Push Code| B[GitHub Repository]
+    end
+    
+    subgraph "CI/CD Pipeline"
+        B -->|Webhook Trigger| C[Jenkins]
+        C -->|Code Analysis| D[SonarQube]
+        D -->|Quality Gate| C
+        C -->|Build Image| E[Docker Build]
+        E -->|Push Image| F[Docker Registry]
+    end
+    
+    subgraph "Kubernetes Cluster"
+        F -->|Deploy| G[Kubernetes Deployment]
+        G -->|Create| H[Pods - stickly-app]
+        H -->|Expose| I[Service - stickly-service]
+        I -->|Route Traffic| J[Ingress Controller]
+    end
+    
+    subgraph "Monitoring & Observability"
+        H -->|Expose /metrics| K[Prometheus]
+        K -->|Scrape Metrics| H
+        K -->|Data Source| L[Grafana]
+        L -->|Visualize| M[Dashboards]
+    end
+    
+    subgraph "Client Access"
+        N[Users] -->|HTTPS| J
+        J -->|Route| I
+    end
+    
+    H -->|Logs| O[Logging System]
+    K -->|Alerts| P[Alert Manager]
+
+    style C fill:#D24939
+    style D fill:#4E9BCD
+    style E fill:#2496ED
+    style G fill:#326CE5
+    style K fill:#E6522C
+    style L fill:#F46800
 ```
 
-### System Flow
+### System Architecture
 
-1. **Client Layer**: User interacts with HTML/CSS/JS frontend
-2. **Network Layer**: Vercel edge network handles routing
-3. **Server Layer**: Express.js processes API requests
-4. **Storage Layer**: In-memory arrays store messages, likes, reports
-5. **Analytics Layer**: Vercel Analytics tracks user behavior
-6. **Persistence Layer**: LocalStorage maintains user preferences
+#### 1. Development & Source Control
+- **GitHub**: Version control and source code repository
+- **Branching Strategy**: Main branch for production, feature branches for development
+
+#### 2. CI/CD Pipeline (Jenkins)
+- **Automated Build**: Jenkins detects code changes via webhooks
+- **Code Quality**: SonarQube analyzes code for bugs, vulnerabilities, and code smells
+- **Docker Build**: Creates containerized application images
+- **Image Registry**: Stores Docker images for deployment
+
+#### 3. Container Orchestration (Kubernetes)
+- **Deployment**: Manages application replicas and rolling updates
+- **Services**: Exposes application via ClusterIP service
+- **Namespace**: Isolated `stickly` namespace for resource management
+- **ConfigMaps/Secrets**: Manages configuration and sensitive data
+
+#### 4. Monitoring Stack
+- **Prometheus**: 
+  - Scrapes `/metrics` endpoint every 15 seconds
+  - Collects Node.js runtime metrics (CPU, memory, event loop)
+  - Stores time-series data for analysis
+- **Grafana**: 
+  - Visualizes metrics via dashboards
+  - Real-time monitoring of application health
+  - Alerting on threshold breaches
+
+#### 5. Application Layer
+- **Express.js Server**: Handles HTTP requests and WebSocket connections
+- **Multer Middleware**: Processes image uploads
+- **In-Memory Storage**: Temporary message storage (development)
+- **Prometheus Client**: Exposes application metrics
+
+#### 6. Client Layer
+- **Browser**: HTML/CSS/JS frontend
+- **LocalStorage**: Client-side persistence for preferences
+- **WebSocket**: Real-time bidirectional communication
+
+### Deployment Flow
+
+1. **Code Commit** → Developer pushes code to GitHub
+2. **Build Trigger** → Jenkins webhook initiates pipeline
+3. **Quality Check** → SonarQube analyzes code quality
+4. **Containerization** → Docker builds application image
+5. **Registry Push** → Image uploaded to container registry
+6. **K8s Deployment** → Kubernetes pulls and deploys new version
+7. **Health Check** → Readiness/liveness probes verify deployment
+8. **Metrics Collection** → Prometheus starts scraping metrics
+9. **Dashboard Update** → Grafana displays real-time metrics
+
+### Key DevOps Components
+
+| Component | Purpose | Configuration |
+|-----------|---------|---------------|
+| **Docker** | Application containerization | `Dockerfile`, `.dockerignore` |
+| **Kubernetes** | Container orchestration | `k8s/stickly.yaml` |
+| **Jenkins** | CI/CD automation | `Jenkinsfile` |
+| **Prometheus** | Metrics collection | `prometheus-values.yaml` |
+| **Grafana** | Metrics visualization | Dashboard JSON configs |
+| **SonarQube** | Code quality analysis | `sonar-project.properties` |
+| **Helm** | Kubernetes package manager | Prometheus chart |
 
 ## 📡 API Endpoints
 

@@ -4,7 +4,22 @@ const multer = require('multer');
 
 // Prometheus metrics
 const client = require('prom-client');
-client.collectDefaultMetrics(); // collect basic Node.js metrics
+const collectDefaultMetrics = client.collectDefaultMetrics;
+collectDefaultMetrics();
+
+// Create custom metrics
+const httpRequestCount = new client.Counter({
+  name: 'http_requests_total',
+  help: 'Total number of HTTP requests',
+  labelNames: ['method', 'route', 'status'],
+});
+
+const httpRequestDuration = new client.Histogram({
+  name: 'http_request_duration_seconds',
+  help: 'HTTP request duration in seconds',
+  labelNames: ['method', 'route', 'status'],
+  buckets: [0.005, 0.01, 0.05, 0.1, 0.25, 0.5, 1, 2, 5],
+});
 
 const app = express();
 const PORT = 3000;
@@ -38,7 +53,16 @@ let messages = [];
 let messageLikes = {}; // Track likes per message: { messageId: count }
 let messageReports = {}; // Track reports per message: { messageId: [reasons] }
 
-// Middleware
+// Middleware to measure metrics
+app.use((req, res, next) => {
+  const end = httpRequestDuration.startTimer();
+  res.on('finish', () => {
+    httpRequestCount.labels(req.method, req.path, res.statusCode).inc();
+    end({ method: req.method, route: req.path, status: res.statusCode });
+  });
+  next();
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
