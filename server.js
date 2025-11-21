@@ -2,6 +2,10 @@ const express = require('express');
 const path = require('path');
 const multer = require('multer');
 
+// Prometheus metrics
+const client = require('prom-client');
+client.collectDefaultMetrics(); // collect basic Node.js metrics
+
 const app = express();
 const PORT = 3000;
 
@@ -29,7 +33,7 @@ const upload = multer({
     }
 });
 
-// Store messages in memory (resets when server restarts)
+// Store messages in memory (resets when server restarts !!)
 let messages = [];
 let messageLikes = {}; // Track likes per message: { messageId: count }
 let messageReports = {}; // Track reports per message: { messageId: [reasons] }
@@ -233,6 +237,16 @@ app.get('/api/messages/counts', (req, res) => {
         confessions: messages.filter(m => m.category === 'confessions').length
     };
     res.json(counts);
+});
+
+// Prometheus metrics endpoint
+app.get('/metrics', async (req, res) => {
+    try {
+        res.set('Content-Type', client.register.contentType);
+        res.end(await client.register.metrics());
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
 });
 
 // Export for Vercel serverless
