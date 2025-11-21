@@ -8,6 +8,18 @@ A modern, feature-rich anonymous message board where users can share their thoug
 ![Node](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen.svg)
 ![Express](https://img.shields.io/badge/express-4.18.2-lightgrey.svg)
 
+## 🌐 Service Ports & URLs
+
+| Service | Port | Local URL | Description |
+|---------|------|-----------|-------------|
+| **Application** | 3000 | http://localhost:3000 | Main web application |
+| **Prometheus Metrics** | 3000 | http://localhost:3000/metrics | Application metrics endpoint |
+| **Prometheus Server** | 9090 | http://localhost:9090 | Prometheus query interface |
+| **Grafana Dashboard** | 3001 | http://localhost:3001 | Metrics visualization |
+| **Jenkins** | 8080 | http://localhost:8080 | CI/CD pipeline |
+| **SonarQube** | 9000 | http://localhost:9000 | Code quality dashboard |
+| **Kubernetes API** | 6443 | - | K8s cluster API server |
+
 ## ✨ Features
 
 ### Core Functionality
@@ -621,84 +633,25 @@ To update, modify `public/index.html`:
 - [ ] **PWA** - Installable progressive web app
 - [ ] **Voice Messages** - Audio message uploads
 
-## 💰 Monetization Strategies
+## 💰 Monetization Strategy
 
-### 1. **Freemium Model**
+### Revenue Streams
 
-**Free Tier:**
-- Post up to 10 messages/day
-- Basic like/share features
-- Standard animations
+1. **Freemium Model** - Free tier (10 messages/day) + Premium ($4.99/month) for unlimited posting, custom themes, and advanced analytics
+2. **Advertising** - Google AdSense, native ads, and sponsored content ($2-5 CPM)
+3. **Enterprise Plans** - Business ($49/month) and Educational ($29/month) with private boards and admin tools
+4. **Virtual Goods** - Themes ($0.99-$2.99), animations ($1.99), badges ($0.49-$1.99)
+5. **API Access** - Developer tier ($99/month) for third-party integrations
+6. **Affiliate Marketing** - Commission-based product recommendations (5-10% per sale)
 
-**Premium Tier ($4.99/month):**
-- Unlimited messages
-- Remove ads
-- Custom message themes
-- Priority support
-- Advanced analytics (view counts, engagement)
-- Message pinning
-- Extended character limit (1000 chars)
+### Projected Revenue
 
-### 2. **Advertisement Revenue**
-
-- **Google AdSense** - Display non-intrusive banner ads
-- **Native Ads** - Sponsored messages (clearly labeled)
-- **Video Ads** - Reward-based (unlock features temporarily)
-- **Estimated Revenue**: $2-5 CPM, ~$200-500/month with 10K daily active users
-
-### 3. **Enterprise/Educational Plans**
-
-**Business Plan ($49/month):**
-- Private team boards
-- Custom branding
-- Admin analytics dashboard
-- Export reports
-- Dedicated support
-
-**Educational Plan ($29/month):**
-- Classroom discussion boards
-- Teacher moderation tools
-- Student engagement tracking
-- Safe, monitored environment
-
-### 4. **Virtual Goods & Customization**
-
-- **Themes & Skins** - $0.99-$2.99 per theme
-- **Custom Animations** - $1.99 per animation pack
-- **Profile Badges** - $0.49-$1.99 per badge
-- **Message Highlights** - $0.49 to highlight a message for 24 hours
-
-### 5. **Affiliate Marketing**
-
-- Recommend relevant products in Knowledge/Thoughts sections
-- Book recommendations in Knowledge category
-- Wellness products in Confessions category
-- Commission-based revenue (5-10% per sale)
-
-### 6. **Data Analytics (Privacy-Compliant)**
-
-- Aggregate, anonymized trend reports
-- Sentiment analysis for market research
-- Sell insights to research institutions
-- **Privacy**: No personal data, fully GDPR/CCPA compliant
-
-### 7. **API Access**
-
-**Developer Tier ($99/month):**
-- API access for third-party integrations
-- Webhooks for real-time events
-- Higher rate limits
-- Technical documentation
-- Developer support
-
-### Revenue Projections
-
-| Users | Monetization Mix | Estimated Monthly Revenue |
-|-------|------------------|---------------------------|
-| 1K | Ads only | $50-100 |
-| 10K | Ads + 5% Premium | $500-1,000 |
-| 50K | Ads + 10% Premium + Virtual Goods | $5,000-10,000 |
-| 100K+ | Full Stack | $20,000-50,000+ |
+| Users | Monthly Revenue |
+|-------|----------------|
+| 1K | $50-100 |
+| 10K | $500-1,000 |
+| 50K | $5,000-10,000 |
+| 100K+ | $20,000-50,000+ |
 
 ## 🤝 Contributing
 
