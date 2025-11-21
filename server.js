@@ -33,7 +33,7 @@ const upload = multer({
     }
 });
 
-// Stores messages in memory (resets when server restarts !!)
+// Stores the messages in memory (resets when server restarts !!)
 let messages = [];
 let messageLikes = {}; // Track likes per message: { messageId: count }
 let messageReports = {}; // Track reports per message: { messageId: [reasons] }
