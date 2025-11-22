@@ -572,6 +572,264 @@ body.dark-mode .category-btn:hover {
     color: white;
 }
 
+/* Post as User Section */
+.post-as-user-section {
+    padding: 1rem;
+    background: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.checkbox-container input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--accent-color);
+}
+
+.checkbox-label {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-color);
+    user-select: none;
+}
+
+.user-info-display {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(0, 113, 227, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(0, 113, 227, 0.1);
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .user-info-display {
+    background: rgba(10, 132, 255, 0.1);
+    border-color: rgba(10, 132, 255, 0.2);
+}
+
+.user-profile-editor {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.user-avatar-selector {
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.user-avatar-large {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-color), #0056b3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+body.dark-mode .user-avatar-large {
+    background: linear-gradient(135deg, #0a84ff, #005bb5);
+}
+
+.user-avatar-selector:hover .user-avatar-large {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.edit-avatar-hint {
+    font-size: 0.75rem;
+    color: var(--subtle-text-color);
+    text-align: center;
+}
+
+.user-name-editor {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.username-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    background: var(--background-color);
+    color: var(--text-color);
+    transition: all 0.3s ease;
+}
+
+.username-input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+}
+
+.username-hint {
+    font-size: 0.75rem;
+    color: var(--subtle-text-color);
+}
+
+.save-profile-btn {
+    width: 100%;
+    padding: 0.75rem;
+    background: linear-gradient(135deg, var(--accent-color), #005bb5);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.save-profile-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
+}
+
+.save-profile-btn:active {
+    transform: translateY(0);
+}
+
+/* Emoji Picker Modal */
+.emoji-picker-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 10001;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease;
+}
+
+.emoji-picker-content {
+    background: var(--background-color);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 450px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.emoji-picker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.emoji-picker-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-color);
+}
+
+.emoji-close-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--subtle-text-color);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.5rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.emoji-close-btn:hover {
+    background: #ff3b30;
+    border-color: #ff3b30;
+    color: white;
+    transform: rotate(90deg);
+}
+
+.emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+    gap: 0.5rem;
+    padding: 1rem;
+    overflow-y: auto;
+    max-height: 400px;
+}
+
+.emoji-option {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    background: var(--background-color);
+}
+
+.emoji-option:hover {
+    background: rgba(0, 113, 227, 0.1);
+    transform: scale(1.1);
+}
+
+body.dark-mode .emoji-option:hover {
+    background: rgba(10, 132, 255, 0.15);
+}
+
+.user-avatar-small {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-color), #0056b3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.user-name-small {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
 #messageInput {
     width: 100%;
     min-height: 150px;
@@ -1196,6 +1454,30 @@ body.dark-mode .message-card:hover::before {
     align-items: flex-start;
     margin-bottom: 1rem;
     gap: 0.5rem;
+}
+
+.message-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-color), #0056b3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+body.dark-mode .message-avatar {
+    background: linear-gradient(135deg, #0a84ff, #005bb5);
+}
+
+.message-username {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-color);
+    line-height: 1.2;
 }
 
 .message-actions {

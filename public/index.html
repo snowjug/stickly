@@ -86,6 +86,48 @@
                         </button>
                     </div>
                 </div>
+                
+                <!-- Post as User Option -->
+                <div class="post-as-user-section">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="postAsUser" onchange="toggleUserInfo()">
+                        <span class="checkbox-label">Post with my profile</span>
+                    </label>
+                    <div id="userInfoDisplay" class="user-info-display" style="display: none;">
+                        <div class="user-profile-editor">
+                            <div class="user-avatar-selector" onclick="openEmojiPicker()">
+                                <div class="user-avatar-large" id="postUserAvatar">👤</div>
+                                <div class="edit-avatar-hint">Click to change</div>
+                            </div>
+                            <div class="user-name-editor">
+                                <input 
+                                    type="text" 
+                                    id="postUserNameInput" 
+                                    class="username-input" 
+                                    placeholder="Enter username"
+                                    maxlength="20"
+                                    oninput="updatePostUsername()"
+                                />
+                                <div class="username-hint">Max 20 characters</div>
+                            </div>
+                        </div>
+                        <button class="save-profile-btn" onclick="savePostProfile()">
+                            💾 Save to Profile
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Emoji Picker Modal -->
+                <div id="emojiPickerModal" class="emoji-picker-modal" style="display: none;">
+                    <div class="emoji-picker-content">
+                        <div class="emoji-picker-header">
+                            <h3>Choose Avatar</h3>
+                            <button class="emoji-close-btn" onclick="closeEmojiPicker()">×</button>
+                        </div>
+                        <div class="emoji-grid" id="emojiGrid"></div>
+                    </div>
+                </div>
+                
                 <textarea 
                     id="messageInput" 
                     placeholder="What's on your mind?"
@@ -584,6 +626,86 @@
             loadMessages();
         }
 
+        // Common emoji list for avatars
+        const avatarEmojis = ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','😇','🥰','😍','🤩','😘','😗','☺️','😚','😙','🥲','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🤧','🥵','🥶','🥴','😵','🤯','🤠','🥳','🥸','😎','🤓','🧐','😕','😟','🙁','☹️','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','☠️','💩','🤡','👹','👺','👻','👽','👾','🤖','😺','😸','😹','😻','😼','😽','🙀','😿','😾','🙈','🙉','🙊','💋','💌','💘','💝','💖','💗','💓','💞','💕','💟','❣️','💔','❤️','🧡','💛','💚','💙','💜','🤎','🖤','🤍','💯','💢','💥','💫','💦','💨','🕳️','💣','💬','👁️','🗨️','🗯️','💭','💤','👋','🤚','🖐️','✋','🖖','👌','🤌','🤏','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','👍','👎','✊','👊','🤛','🤜','👏','🙌','👐','🤲','🤝','🙏','✍️','💅','🤳','💪','🦾','🦿','🦵','🦶','👂','🦻','👃','🧠','🫀','🫁','🦷','🦴','👀','👁️','👅','👄','🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐦','🐤','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🪱','🐛','🦋','🐌','🐞','🐜','🪰','🪲','🪳','🦟','🦗','🕷️','🕸️','🦂','🐢','🐍','🦎','🦖','🦕','🐙','🦑','🦐','🦞','🦀','🐡','🐠','🐟','🐬','🐳','🐋','🦈','🐊','🐅','🐆','🦓','🦍','🦧','🦣','🐘','🦛','🦏','🐪','🐫','🦒','🦘','🦬','🐃','🐂','🐄','🐎','🐖','🐏','🐑','🦙','🐐','🦌','🐕','🐩','🦮','🐕‍🦺','🐈','🐈‍⬛','🪶','🐓','🦃','🦤','🦚','🦜','🦢','🦩','🕊️','🐇','🦝','🦨','🦡','🦫','🦦','🦥','🐁','🐀','🐿️','🦔','🌵','🎄','🌲','🌳','🌴','🌱','🌿','☘️','🍀','🎍','🎋','🍃','🍂','🍁','🍄','🐚','🌾','💐','🌷','🌹','🥀','🌺','🌸','🌼','🌻','🌞','🌝','🌛','🌜','🌚','🌕','🌖','🌗','🌘','🌑','🌒','🌓','🌔','🌙','🌎','🌍','🌏','🪐','💫','⭐','🌟','✨','⚡','☄️','💥','🔥','🌪️','🌈','☀️','🌤️','⛅','🌥️','☁️','🌦️','🌧️','⛈️','🌩️','🌨️','❄️','☃️','⛄','🌬️','💨','💧','💦','☔','☂️','🌊','🌫️'];
+
+        // Toggle user info display
+        function toggleUserInfo() {
+            const postAsUser = document.getElementById('postAsUser').checked;
+            const userInfoDisplay = document.getElementById('userInfoDisplay');
+            
+            if (postAsUser) {
+                const profile = getUserProfile();
+                document.getElementById('postUserAvatar').textContent = profile.avatar;
+                document.getElementById('postUserNameInput').value = profile.username;
+                userInfoDisplay.style.display = 'block';
+            } else {
+                userInfoDisplay.style.display = 'none';
+            }
+        }
+
+        // Open emoji picker
+        function openEmojiPicker() {
+            const modal = document.getElementById('emojiPickerModal');
+            const grid = document.getElementById('emojiGrid');
+            
+            // Populate emoji grid
+            grid.innerHTML = avatarEmojis.map(emoji => 
+                `<div class="emoji-option" onclick="selectPostAvatar('${emoji}')">${emoji}</div>`
+            ).join('');
+            
+            modal.style.display = 'flex';
+        }
+
+        // Close emoji picker
+        function closeEmojiPicker() {
+            document.getElementById('emojiPickerModal').style.display = 'none';
+        }
+
+        // Select avatar for post
+        function selectPostAvatar(emoji) {
+            document.getElementById('postUserAvatar').textContent = emoji;
+            closeEmojiPicker();
+        }
+
+        // Update username preview
+        function updatePostUsername() {
+            const input = document.getElementById('postUserNameInput');
+            const username = input.value.trim() || 'Anonymous';
+            // Remove special characters and limit length
+            input.value = input.value.replace(/[^a-zA-Z0-9_\s]/g, '').substring(0, 20);
+        }
+
+        // Save profile changes
+        function savePostProfile() {
+            const username = document.getElementById('postUserNameInput').value.trim() || 'Anonymous';
+            const avatar = document.getElementById('postUserAvatar').textContent;
+            
+            const profile = {
+                username: username,
+                avatar: avatar
+            };
+            
+            sessionStorage.setItem('userProfile', JSON.stringify(profile));
+            
+            // Update main profile display if it exists
+            const profileAvatar = document.getElementById('profileAvatar');
+            const profileUsername = document.getElementById('profileUsername');
+            if (profileAvatar) profileAvatar.textContent = avatar;
+            if (profileUsername) profileUsername.textContent = username;
+            
+            // Show success feedback
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '✓ Saved!';
+            btn.style.background = 'linear-gradient(135deg, #52c234, #61e049)';
+            
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.background = '';
+            }, 1500);
+        }
+
         // Toggle modal
         function toggleModal() {
             const modal = document.getElementById('postModal');
@@ -599,6 +721,9 @@
                     imageUrl.value = '';
                     document.getElementById('imagePreview').innerHTML = '';
                 }
+                // Reset post as user checkbox
+                document.getElementById('postAsUser').checked = false;
+                document.getElementById('userInfoDisplay').style.display = 'none';
                 updateCharCount();
             }
             
@@ -660,10 +785,19 @@
                 formData.append('message', messageText || '');
                 formData.append('category', selectedCategory);
                 
-                // Get user profile with default anonymous values
-                const profile = getUserProfile();
-                formData.append('username', profile.username);
-                formData.append('avatar', profile.avatar);
+                // Check if user wants to post with profile
+                const postAsUser = document.getElementById('postAsUser').checked;
+                if (postAsUser) {
+                    // Use values from the editor
+                    const username = document.getElementById('postUserNameInput').value.trim() || 'Anonymous';
+                    const avatar = document.getElementById('postUserAvatar').textContent;
+                    formData.append('username', username);
+                    formData.append('avatar', avatar);
+                } else {
+                    // Post as anonymous
+                    formData.append('username', 'Anonymous');
+                    formData.append('avatar', '🕵️');
+                }
                 
                 if (imageUpload && imageUpload.files[0]) {
                     console.log('Uploading image:', imageUpload.files[0].name);
