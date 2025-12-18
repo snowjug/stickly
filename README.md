@@ -8,42 +8,6 @@ A modern, feature-rich anonymous message board where users can share their thoug
 ![Node](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen.svg)
 ![Express](https://img.shields.io/badge/express-4.18.2-lightgrey.svg)
 
-## 📸 Screenshots
-
-<div align="center">
-
-### Application Interface
-
-<img src="screenshot/Screenshot 2025-11-21 220502.png" alt="Main message board interface" width="800"/>
-
-*Main message board interface with category filters*
-
-<img src="screenshot/Screenshot 2025-11-21 221002.png" alt="Message posting features" width="800"/>
-
-*Message posting and interaction features*
-
-<img src="screenshot/Screenshot 2025-11-21 221344.png" alt="Real-time messaging" width="800"/>
-
-*Real-time messaging and reactions*
-
-<img src="screenshot/Screenshot 2025-11-21 223147.png" alt="Category views" width="800"/>
-
-*Category-specific views*
-
-<img src="screenshot/Screenshot 2025-11-21 233307.png" alt="Dark mode" width="800"/>
-
-*Dark mode interface*
-
-<img src="screenshot/Screenshot 2025-11-21 233413.png" alt="Mobile design" width="800"/>
-
-*Mobile responsive design*
-
-<img src="screenshot/Screenshot 2025-11-21 233557.png" alt="Admin panel" width="800"/>
-
-*Admin panel and moderation features*
-
-</div>
-
 ## 🌐 Service Ports & URLs
 
 | Service | Port | Local URL | Description |
@@ -255,7 +219,43 @@ Access application metrics at:
 http://localhost:3000/metrics
 ```
 
-## 🛠️ Tech Stack
+## � Screenshots
+
+<div align="center">
+
+### Application Interface
+
+<img src="screenshot/Screenshot 2025-11-21 220502.png" alt="Main message board interface" width="800"/>
+
+*Main message board interface with category filters*
+
+<img src="screenshot/Screenshot 2025-11-21 221002.png" alt="Message posting features" width="800"/>
+
+*Message posting and interaction features*
+
+<img src="screenshot/Screenshot 2025-11-21 221344.png" alt="Real-time messaging" width="800"/>
+
+*Real-time messaging and reactions*
+
+<img src="screenshot/Screenshot 2025-11-21 223147.png" alt="Category views" width="800"/>
+
+*Category-specific views*
+
+<img src="screenshot/Screenshot 2025-11-21 233307.png" alt="Dark mode" width="800"/>
+
+*Dark mode interface*
+
+<img src="screenshot/Screenshot 2025-11-21 233413.png" alt="Mobile design" width="800"/>
+
+*Mobile responsive design*
+
+<img src="screenshot/Screenshot 2025-11-21 233557.png" alt="Admin panel" width="800"/>
+
+*Admin panel and moderation features*
+
+</div>
+
+## �🛠️ Tech Stack
 
 <div align="center">
 
