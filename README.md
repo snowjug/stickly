@@ -685,25 +685,32 @@ This project is open source and available under the MIT License.
 
 ### Application Interface
 
-![Screenshot 1](screenshot/Screenshot%202025-11-21%20220502.png)
+<img src="screenshot/Screenshot 2025-11-21 220502.png" alt="Main message board interface" width="800"/>
+
 *Main message board interface with category filters*
 
-![Screenshot 2](screenshot/Screenshot%202025-11-21%20221002.png)
+<img src="screenshot/Screenshot 2025-11-21 221002.png" alt="Message posting features" width="800"/>
+
 *Message posting and interaction features*
 
-![Screenshot 3](screenshot/Screenshot%202025-11-21%20221344.png)
+<img src="screenshot/Screenshot 2025-11-21 221344.png" alt="Real-time messaging" width="800"/>
+
 *Real-time messaging and reactions*
 
-![Screenshot 4](screenshot/Screenshot%202025-11-21%20223147.png)
+<img src="screenshot/Screenshot 2025-11-21 223147.png" alt="Category views" width="800"/>
+
 *Category-specific views*
 
-![Screenshot 5](screenshot/Screenshot%202025-11-21%20233307.png)
+<img src="screenshot/Screenshot 2025-11-21 233307.png" alt="Dark mode" width="800"/>
+
 *Dark mode interface*
 
-![Screenshot 6](screenshot/Screenshot%202025-11-21%20233413.png)
+<img src="screenshot/Screenshot 2025-11-21 233413.png" alt="Mobile design" width="800"/>
+
 *Mobile responsive design*
 
-![Screenshot 7](screenshot/Screenshot%202025-11-21%20233557.png)
+<img src="screenshot/Screenshot 2025-11-21 233557.png" alt="Admin panel" width="800"/>
+
 *Admin panel and moderation features*
 
 </div>
