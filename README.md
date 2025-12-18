@@ -2,8 +2,6 @@
 
 > **Your secrets are safe here**
 
-![Workflow](workflow.png)
-
 A modern, feature-rich anonymous message board where users can share their thoughts, knowledge, and confessions with the world. Built with a sleek Apple-inspired design featuring smooth animations, likes/reactions, search functionality, and a fully responsive interface optimized for all devices.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
@@ -148,6 +146,8 @@ A modern, feature-rich anonymous message board where users can share their thoug
 - **Modular CSS** - Organized styles with CSS custom properties
 
 ## 🚀 Quick Start
+
+![Workflow](workflow.png)
 
 ### Prerequisites
 
