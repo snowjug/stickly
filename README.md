@@ -679,6 +679,35 @@ This project is open source and available under the MIT License.
 - Admin password stored in plaintext (development only)
 - Images stored as base64 (inefficient for large files)
 
+## 📸 Screenshots
+
+<div align="center">
+
+### Application Interface
+
+![Screenshot 1](screenshot/Screenshot%202025-11-21%20220502.png)
+*Main message board interface with category filters*
+
+![Screenshot 2](screenshot/Screenshot%202025-11-21%20221002.png)
+*Message posting and interaction features*
+
+![Screenshot 3](screenshot/Screenshot%202025-11-21%20221344.png)
+*Real-time messaging and reactions*
+
+![Screenshot 4](screenshot/Screenshot%202025-11-21%20223147.png)
+*Category-specific views*
+
+![Screenshot 5](screenshot/Screenshot%202025-11-21%20233307.png)
+*Dark mode interface*
+
+![Screenshot 6](screenshot/Screenshot%202025-11-21%20233413.png)
+*Mobile responsive design*
+
+![Screenshot 7](screenshot/Screenshot%202025-11-21%20233557.png)
+*Admin panel and moderation features*
+
+</div>
+
 ---
 
 **Built with Node.js & Express | Deployed on Vercel | Designed for anonymous expression**
