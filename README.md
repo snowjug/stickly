@@ -15,7 +15,7 @@ A modern, feature-rich anonymous message board where users can share their thoug
 | **Application** | 30080 | http://localhost:30080 | Main web application (NodePort) |
 | **Prometheus Metrics** | 30080 | http://localhost:30080/metrics | Application metrics endpoint |
 | **Prometheus Server** | 30002 | http://localhost:30002 | Prometheus query interface |
-| **Grafana Dashboard** | 3001 | http://localhost:3001 | Metrics visualization |
+| **Grafana Dashboard** | 32000 | http://localhost:32000 | Metrics visualization |
 | **Jenkins** | 8080 | http://localhost:8080 | CI/CD pipeline |
 | **SonarQube** | 9000 | http://localhost:9000 | Code quality dashboard |
 | **Kubernetes API** | 6443 | - | K8s cluster API server |
