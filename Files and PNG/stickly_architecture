@@ -1,0 +1,52 @@
+digraph "Stickly Application Architecture" {
+	graph [bgcolor=white fontcolor="#2D3436" fontname="Sans-Serif" fontsize=14 label="Stickly Application Architecture" nodesep=0.8 pad=0.5 rankdir=TB ranksep=1.0 splines=spline]
+	node [fixedsize=true fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13 height=1.4 imagescale=true labelloc=b shape=box style=rounded width=1.4]
+	edge [color="#7B8894"]
+	a6fd764912814cff8e268b02f8d176f8 [label="Users/Browsers" height=1.9 image="C:\Users\HP\AppData\Local\Programs\Python\Python313\Lib\site-packages\resources/onprem/client\user.png" shape=none]
+	subgraph "cluster_Frontend Layer" {
+		graph [bgcolor="#E5F5FD" fontname="Sans-Serif" fontsize=12 label="Frontend Layer" labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+		"039d355c1f1d412a824804e3b39d0960" [label="HTML/CSS/JS
+Socket.io Client" height=2.3 image="C:\Users\HP\AppData\Local\Programs\Python\Python313\Lib\site-packages\resources/programming/language\javascript.png" shape=none]
+	}
+	subgraph "cluster_Kubernetes Cluster" {
+		graph [bgcolor="#E5F5FD" fontname="Sans-Serif" fontsize=12 label="Kubernetes Cluster" labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+		subgraph "cluster_Application Services" {
+			graph [bgcolor="#EBF3E7" fontname="Sans-Serif" fontsize=12 label="Application Services" labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+			ce1a71da13f6424b8aa8b146ccc3fbad [label="NodePort
+Service
+:30080" height=2.7 image="C:\Users\HP\AppData\Local\Programs\Python\Python313\Lib\site-packages\resources/k8s/network\svc.png" shape=none]
+			subgraph "cluster_Pod (Replicas: 1)" {
+				graph [bgcolor="#ECE8F6" fontname="Sans-Serif" fontsize=12 label="Pod (Replicas: 1)" labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+				faf56b064d734bf6bf1f14487dc91259 [label="Express.js API
+Socket.io Server
+:3000" height=2.7 image="C:\Users\HP\AppData\Local\Programs\Python\Python313\Lib\site-packages\resources/programming/language\nodejs.png" shape=none]
+				"151cb487626e432094021bbcea0a0b01" [label="In-Memory
+Storage" height=2.3 image="C:\Users\HP\AppData\Local\Programs\Python\Python313\Lib\site-packages\resources/onprem/compute\server.png" shape=none]
+			}
+		}
+		subgraph cluster_Monitoring {
+			graph [bgcolor="#EBF3E7" fontname="Sans-Serif" fontsize=12 label=Monitoring labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+			b7ff3ed3cc0b40dbb508948da8640696 [label="Prometheus
+:30002" height=2.3 image="C:\Users\HP\AppData\Local\Programs\Python\Python313\Lib\site-packages\resources/onprem/monitoring\prometheus.png" shape=none]
+			"78abd76d60814992941917e2d5811baa" [label="Grafana
+:32000" height=2.3 image="C:\Users\HP\AppData\Local\Programs\Python\Python313\Lib\site-packages\resources/onprem/monitoring\grafana.png" shape=none]
+		}
+	}
+	subgraph "cluster_CI/CD Pipeline" {
+		graph [bgcolor="#E5F5FD" fontname="Sans-Serif" fontsize=12 label="CI/CD Pipeline" labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+		"0686d723fc7042c8b48fa8eeb2d7ae43" [label="Jenkins
+Pipeline
+:8080" height=2.7 image="C:\Users\HP\AppData\Local\Programs\Python\Python313\Lib\site-packages\resources/onprem/ci\jenkins.png" shape=none]
+		"3e57a06b94724f39bebe1a0e734b73ab" [label="Docker Hub
+Registry" height=2.3 image="C:\Users\HP\AppData\Local\Programs\Python\Python313\Lib\site-packages\resources/onprem/container\docker.png" shape=none]
+	}
+	a6fd764912814cff8e268b02f8d176f8 -> "039d355c1f1d412a824804e3b39d0960" [label="HTTP/WebSocket" dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"039d355c1f1d412a824804e3b39d0960" -> ce1a71da13f6424b8aa8b146ccc3fbad [label="REST API" dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	ce1a71da13f6424b8aa8b146ccc3fbad -> faf56b064d734bf6bf1f14487dc91259 [label=Route dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	faf56b064d734bf6bf1f14487dc91259 -> "151cb487626e432094021bbcea0a0b01" [label=Store dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	faf56b064d734bf6bf1f14487dc91259 -> "039d355c1f1d412a824804e3b39d0960" [label=Events color=orange dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13 style=dashed]
+	faf56b064d734bf6bf1f14487dc91259 -> b7ff3ed3cc0b40dbb508948da8640696 [label=Metrics dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13 style=dotted]
+	b7ff3ed3cc0b40dbb508948da8640696 -> "78abd76d60814992941917e2d5811baa" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"0686d723fc7042c8b48fa8eeb2d7ae43" -> "3e57a06b94724f39bebe1a0e734b73ab" [label="Build & Push" dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"3e57a06b94724f39bebe1a0e734b73ab" -> ce1a71da13f6424b8aa8b146ccc3fbad [label=Deploy dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+}
