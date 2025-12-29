@@ -11,7 +11,9 @@
     <meta name="apple-mobile-web-app-title" content="Stickly">
     <title>Stickly - Share Your Thoughts Anonymously</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Vercel Speed Insights -->
+    <!-- Vercel Speed Insights - Configuration before the main script -->
+    <script src="speed-insights.js"></script>
+    <!-- Vercel Speed Insights - Main tracking script -->
     <script defer src="/_vercel/speed-insights/script.js"></script>
 </head>
 <body>
@@ -1409,24 +1411,7 @@
             }
         }
 
-        // Vercel Speed Insights - Optional beforeSend hook for data sanitization
-        window.speedInsightsBeforeSend = function(data) {
-            // Remove sensitive information from URLs if needed
-            // For example, you could sanitize query parameters here
-            if (data && data.url) {
-                // Parse the URL and remove sensitive query parameters
-                try {
-                    const url = new URL(data.url, window.location.origin);
-                    // Example: Remove specific query parameters
-                    // url.searchParams.delete('token');
-                    // url.searchParams.delete('api_key');
-                    data.url = url.toString();
-                } catch (e) {
-                    console.warn('Could not parse URL for Speed Insights:', e);
-                }
-            }
-            return data;
-        };
+
     </script>
 </body>
 </html>
