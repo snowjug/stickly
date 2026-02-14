@@ -1,4 +1,4 @@
-# Stickly 💬
+# Stickly - Anonymous Messaging 💬
 
 > **Your secrets are safe here**
 
