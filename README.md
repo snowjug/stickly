@@ -8,7 +8,7 @@ A modern, feature-rich anonymous message board where users can share their thoug
 ![Node](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen.svg)
 ![Express](https://img.shields.io/badge/express-4.18.2-lightgrey.svg)
 
-## 🌐 Service Ports & URLs
+## 🌐 Service Ports & URLs (general)
 
 | Service | Port | Local URL | Description |
 |---------|------|-----------|-------------|
