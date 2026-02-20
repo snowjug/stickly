@@ -1628,6 +1628,14 @@ body.dark-mode .message-avatar {
     margin-bottom: 0.25rem;
 }
 
+.section-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.3rem;
+    font-size: 0.95em;
+}
+
 .no-messages {
     grid-column: 1 / -1;
     text-align: center;
@@ -1670,10 +1678,114 @@ body.dark-mode .message-avatar {
     gap: 0.625rem;
     margin-top: 1.25rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid rgba(0, 113, 227, 0.12);
     align-items: center;
     flex-wrap: nowrap;
     justify-content: space-between;
+}
+
+.skeleton-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.skeleton-card {
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1rem;
+    background: var(--card-background);
+}
+
+.skeleton-header {
+    display: flex;
+    gap: 0.7rem;
+    margin-bottom: 0.9rem;
+}
+
+.skeleton-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(90deg, rgba(0,0,0,0.06), rgba(0,0,0,0.12), rgba(0,0,0,0.06));
+    background-size: 220% 100%;
+    animation: shimmer 1.2s infinite;
+}
+
+.skeleton-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    flex: 1;
+}
+
+.skeleton-line {
+    height: 10px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(0,0,0,0.06), rgba(0,0,0,0.12), rgba(0,0,0,0.06));
+    background-size: 220% 100%;
+    animation: shimmer 1.2s infinite;
+}
+
+.skeleton-line.short { width: 35%; }
+.skeleton-line.medium { width: 62%; }
+.skeleton-line.full { width: 100%; margin-bottom: 0.5rem; }
+
+.skeleton-actions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.skeleton-pill {
+    height: 34px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(0,0,0,0.06), rgba(0,0,0,0.12), rgba(0,0,0,0.06));
+    background-size: 220% 100%;
+    animation: shimmer 1.2s infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: 220% 0; }
+    100% { background-position: -220% 0; }
+}
+
+.toast-container {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 1500;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    pointer-events: none;
+}
+
+.toast {
+    min-width: 220px;
+    max-width: 320px;
+    padding: 0.65rem 0.85rem;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 0.9rem;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.22);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast-success {
+    background: linear-gradient(135deg, #2aa745, #24963d);
+}
+
+.toast-error {
+    background: linear-gradient(135deg, #dc3545, #c72f3f);
 }
 
 .like-btn,

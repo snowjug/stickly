@@ -282,6 +282,9 @@
     </div>
 
     <!-- Footer -->
+    <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- Footer -->
     <footer class="footer">
         <p>Made by GigaNigga Atharv & Ankit</p>
     </footer>
@@ -538,7 +541,7 @@
 
         // Load messages when page loads
         window.onload = () => {
-            loadMessages();
+            switchSection('all');
             updateCharCount();
             initDarkMode();
             initFAB();
@@ -606,16 +609,16 @@
             });
 
             const titles = {
-                'all': { title: 'All Messages', subtitle: 'Anonymous messages from around the world' },
-                'trending': { title: 'Trending', subtitle: 'Most liked messages right now' },
-                'whistleblower': { title: 'Whistleblower', subtitle: 'Reveal the truth - Expose scams, corruption, and company secrets' },
-                'controversy': { title: 'Controversy', subtitle: 'Hot takes and heated debates' },
-                'thoughts': { title: 'Thoughts', subtitle: 'Random thoughts and musings' },
-                'confessions': { title: 'Confessions', subtitle: 'Anonymous secrets and stories' }
+                'all': { icon: '💬', title: 'All Messages', subtitle: 'Anonymous messages from around the world' },
+                'trending': { icon: '🔥', title: 'Trending', subtitle: 'Most liked messages right now' },
+                'whistleblower': { icon: '🔓', title: 'Whistleblower', subtitle: 'Reveal the truth - Expose scams, corruption, and company secrets' },
+                'controversy': { icon: '⚡', title: 'Controversy', subtitle: 'Hot takes and heated debates' },
+                'thoughts': { icon: '💭', title: 'Thoughts', subtitle: 'Random thoughts and musings' },
+                'confessions': { icon: '🤫', title: 'Confessions', subtitle: 'Anonymous secrets and stories' }
             };
 
             const sectionMeta = titles[section] || titles['all'];
-            document.getElementById('sectionTitle').textContent = sectionMeta.title;
+            document.getElementById('sectionTitle').innerHTML = `<span class="section-icon">${sectionMeta.icon}</span> ${sectionMeta.title}`;
             document.getElementById('sectionSubtitle').textContent = sectionMeta.subtitle;
 
             // Trigger section-specific effects
@@ -630,6 +633,51 @@
             }
 
             loadMessages();
+        }
+
+        function showLoadingSkeletons() {
+            const messagesList = document.getElementById('messagesList');
+            const skeletonCount = 6;
+            const skeletons = Array.from({ length: skeletonCount }).map(() => `
+                <div class="skeleton-card">
+                    <div class="skeleton-header">
+                        <div class="skeleton-avatar"></div>
+                        <div class="skeleton-lines">
+                            <div class="skeleton-line short"></div>
+                            <div class="skeleton-line medium"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-line full"></div>
+                    <div class="skeleton-line full"></div>
+                    <div class="skeleton-line medium"></div>
+                    <div class="skeleton-actions">
+                        <div class="skeleton-pill"></div>
+                        <div class="skeleton-pill"></div>
+                        <div class="skeleton-pill"></div>
+                        <div class="skeleton-pill"></div>
+                    </div>
+                </div>
+            `).join('');
+
+            messagesList.innerHTML = `<div class="skeleton-grid">${skeletons}</div>`;
+            messagesList.style.minHeight = 'auto';
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => toast.classList.add('show'));
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 220);
+            }, 2200);
         }
 
         // Common emoji list for avatars
@@ -747,6 +795,8 @@
         // Load messages
         async function loadMessages() {
             try {
+                showLoadingSkeletons();
+
                 const url = (currentSection === 'all' || currentSection === 'trending')
                     ? '/api/messages'
                     : `/api/messages?category=${currentSection}`;
@@ -969,22 +1019,22 @@
                         </div>
                         <div class="message-actions">
                             <span class="message-time">${timeAgo}</span>
-                            <button class="delete-btn" onclick="deleteMessage(${msg.id})" title="Delete message">×</button>
+                            <button class="delete-btn" onclick="deleteMessage(${msg.id})" title="Delete message" aria-label="Delete message">×</button>
                         </div>
                     </div>
                     <p class="message-text">${escapeHtml(msg.text)}</p>
                     ${msg.image ? `<img src="${msg.image}" alt="Attached image" class="message-image" onclick="openImageModal('${msg.image}')" />` : ''}
                     <div class="message-footer">
-                        <button class="like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike(${msg.id}, event)" title="Like this message">
+                        <button class="like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike(${msg.id}, event)" title="Like this message" aria-label="Like message">
                             <span class="heart-icon">${isLiked ? '❤️' : '🤍'}</span>
                             <span class="like-count">${likesCount}</span>
                         </button>
-                        <button class="reply-btn" onclick="toggleReplies(${msg.id}, event)" title="Reply to this message">
+                        <button class="reply-btn" onclick="toggleReplies(${msg.id}, event)" title="Reply to this message" aria-label="Reply to message">
                             <span>💬</span>
                             <span>${repliesCount}</span>
                         </button>
-                        <button class="share-btn" onclick="shareMessage(${msg.id}, event)" title="Share this message">🔗</button>
-                        <button class="report-btn" onclick="openReportModal(${msg.id}, event)" title="Report this message">🚩</button>
+                        <button class="share-btn" onclick="shareMessage(${msg.id}, event)" title="Share this message" aria-label="Share message">🔗</button>
+                        <button class="report-btn" onclick="openReportModal(${msg.id}, event)" title="Report this message" aria-label="Report message">🚩</button>
                     </div>
                     ${inlineRepliesHtml}
                 `;
@@ -1441,11 +1491,11 @@
                 
                 if (response.ok) {
                     closeReportModal();
-                    alert('Thank you for your report. We will review this message.');
+                    showToast('Report submitted. Thank you.', 'success');
                 }
             } catch (error) {
                 console.error('Error submitting report:', error);
-                alert('Error submitting report');
+                showToast('Error submitting report', 'error');
             }
         }
 
@@ -1492,10 +1542,11 @@
                 
                 navigator.clipboard.writeText(text).then(() => {
                     shareBtn.innerHTML = '✓';
+                    showToast('Copied to clipboard', 'success');
                     setTimeout(() => shareBtn.innerHTML = '🔗', 1500);
                 }).catch(err => {
                     console.error('Error copying:', err);
-                    alert('Share failed. Please try again.');
+                    showToast('Share failed. Please try again.', 'error');
                 });
             }
         }
