@@ -985,7 +985,6 @@
             messagesList.style.minHeight = (totalRows * (cardWidth + gap)) + 'px';
 
             // Add effects
-            addTiltEffect();
             document.querySelectorAll('.message-card').forEach(makeDraggable);
         }
 
@@ -1126,29 +1125,7 @@
 
         // 3D tilt effect on hover
         function addTiltEffect() {
-            const cards = document.querySelectorAll('.message-card');
-            
-            cards.forEach(card => {
-                card.addEventListener('mousemove', (e) => {
-                    const rect = card.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    
-                    const centerX = rect.width / 2;
-                    const centerY = rect.height / 2;
-                    
-                    const rotateX = (y - centerY) / 10;
-                    const rotateY = (centerX - x) / 10;
-                    
-                    card.style.setProperty('--rotate-x', `${rotateX}deg`);
-                    card.style.setProperty('--rotate-y', `${rotateY}deg`);
-                });
-                
-                card.addEventListener('mouseleave', () => {
-                    card.style.setProperty('--rotate-x', '0deg');
-                    card.style.setProperty('--rotate-y', '0deg');
-                });
-            });
+            return;
         }
 
         // Calculate time ago

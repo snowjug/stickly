@@ -351,7 +351,8 @@ body.dark-mode .nav-btn:hover {
     white-space: nowrap;
     opacity: 1;
     max-width: 100px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(0);
+    transition: opacity 0.2s ease, max-width 0.25s ease, transform 0.25s ease;
 }
 
 .fab.collapsed {
@@ -359,11 +360,13 @@ body.dark-mode .nav-btn:hover {
     width: 56px;
     border-radius: 50%;
     padding: 0;
+    gap: 0;
 }
 
 .fab.collapsed .fab-label {
     opacity: 0;
     max-width: 0;
+    transform: translateX(8px);
 }
 
 .fab:hover {
@@ -393,6 +396,12 @@ body.dark-mode .fab:hover {
 }
 
 .fab-icon {
+    width: 24px;
+    height: 24px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -402,6 +411,10 @@ body.dark-mode .fab:hover {
 
 .fab.collapsed .fab-icon {
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fab.collapsed:hover .fab-icon {
+    transform: none;
 }
 
 /* Modal */
@@ -1213,7 +1226,7 @@ body.dark-mode #messageInput:focus {
 }
 
 .message-card:hover {
-    transform: translateY(-10px) rotateX(var(--rotate-x, 0deg)) rotateY(var(--rotate-y, 0deg)) scale(1.02);
+    transform: translateY(-10px) scale(1.02);
     box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08);
     border-color: var(--card-accent, var(--accent-color));
     z-index: 10;
@@ -1767,21 +1780,36 @@ body,
 }
 
 .reply-send-btn {
-    width: 34px;
-    height: 34px;
-    border: none;
+    width: 38px;
+    height: 38px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 50%;
-    background: var(--accent-color);
+    background: linear-gradient(135deg, var(--accent-color), var(--accent-color-hover));
     color: white;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
     cursor: pointer;
-    transition: transform 0.15s ease, opacity 0.15s ease;
+    box-shadow: 0 4px 10px rgba(0, 113, 227, 0.25);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.reply-send-btn svg {
+    display: block;
+    width: 16px;
+    height: 16px;
+    transform: translateX(1px);
 }
 
 .reply-send-btn:hover {
-    transform: scale(1.06);
+    transform: translateY(-1px) scale(1.04);
+    box-shadow: 0 6px 14px rgba(0, 113, 227, 0.32);
+    filter: brightness(1.03);
+}
+
+.reply-send-btn:active {
+    transform: translateY(0) scale(0.98);
 }
 
 .message-card.expanded-card {
