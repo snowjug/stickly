@@ -152,7 +152,7 @@
                     />
                     <div style="text-align: center; margin: 0.5rem 0; color: var(--subtle-text-color); font-size: 0.9rem;">or</div>
                     <input 
-                        type="url" 
+                        type="text" 
                         id="imageUrl" 
                         placeholder="Paste image/GIF URL"
                         class="admin-input"
@@ -493,6 +493,13 @@
             const imageUpload = document.getElementById('imageUpload');
             const imageUrl = document.getElementById('imageUrl');
             const imagePreview = document.getElementById('imagePreview');
+
+            const normalizeImageUrl = (value) => {
+                const raw = (value || '').trim();
+                if (!raw) return '';
+                if (/^(https?:\/\/|data:image\/)/i.test(raw)) return raw;
+                return `https://${raw}`;
+            };
             
             if (!imageUpload) return;
             
@@ -517,15 +524,48 @@
             // Handle URL input
             if (imageUrl) {
                 imageUrl.addEventListener('input', (e) => {
-                    const url = e.target.value.trim();
+                    const url = normalizeImageUrl(e.target.value);
                     if (url) {
                         imageUpload.value = ''; // Clear file upload
-                        imagePreview.innerHTML = `
-                            <div class="preview-container">
-                                <img src="${url}" alt="Preview" onerror="this.parentElement.innerHTML='<p style=\"color: var(--subtle-text-color); text-align: center;\">Invalid image URL</p>';" />
-                                <button class="remove-image" onclick="removeImage()">×</button>
-                            </div>
-                        `;
+                        const looksLikeImage = /^data:image\//i.test(url) || /\.(gif|png|jpe?g|webp|avif|bmp|svg)(\?.*)?(#.*)?$/i.test(url);
+                        imagePreview.innerHTML = '';
+
+                        const previewContainer = document.createElement('div');
+                        previewContainer.className = 'preview-container';
+
+                        const previewImage = document.createElement('img');
+                        previewImage.alt = 'Preview';
+                        previewImage.src = url;
+
+                        const removeButton = document.createElement('button');
+                        removeButton.className = 'remove-image';
+                        removeButton.type = 'button';
+                        removeButton.textContent = '×';
+                        removeButton.addEventListener('click', removeImage);
+
+                        previewImage.onerror = () => {
+                            previewContainer.innerHTML = '';
+                            const warning = document.createElement('p');
+                            warning.style.color = 'var(--subtle-text-color)';
+                            warning.style.textAlign = 'center';
+                            warning.textContent = 'Could not preview this link. If it is a direct image/GIF URL, it can still be posted.';
+                            previewContainer.appendChild(warning);
+                            previewContainer.appendChild(removeButton);
+                        };
+
+                        previewContainer.appendChild(previewImage);
+                        previewContainer.appendChild(removeButton);
+                        imagePreview.appendChild(previewContainer);
+
+                        if (!looksLikeImage) {
+                            const tip = document.createElement('p');
+                            tip.style.marginTop = '0.4rem';
+                            tip.style.color = 'var(--subtle-text-color)';
+                            tip.style.fontSize = '0.8rem';
+                            tip.style.textAlign = 'center';
+                            tip.textContent = 'Tip: use a direct image URL ending in .gif, .png, .jpg, etc.';
+                            imagePreview.appendChild(tip);
+                        }
                     } else {
                         imagePreview.innerHTML = '';
                     }
@@ -580,6 +620,7 @@
                 document.body.classList.add('dark-mode');
                 document.getElementById('darkModeIcon').textContent = '☀️';
             }
+            updateLikeIconsForCurrentTheme();
         }
 
         function toggleDarkMode() {
@@ -587,6 +628,21 @@
             const isDark = document.body.classList.contains('dark-mode');
             localStorage.setItem('darkMode', isDark);
             document.getElementById('darkModeIcon').textContent = isDark ? '☀️' : '🌙';
+            updateLikeIconsForCurrentTheme();
+        }
+
+        function getLikeHeartIcon(isLiked) {
+            if (!isLiked) return '🤍';
+            return document.body.classList.contains('dark-mode') ? '🤍' : '❤️';
+        }
+
+        function updateLikeIconsForCurrentTheme() {
+            document.querySelectorAll('.like-btn').forEach(btn => {
+                const heart = btn.querySelector('.heart-icon');
+                if (!heart) return;
+                const isLiked = btn.classList.contains('liked');
+                heart.textContent = getLikeHeartIcon(isLiked);
+            });
         }
 
         // Update character count
@@ -866,8 +922,11 @@
                     console.log('Uploading image:', imageUpload.files[0].name);
                     formData.append('image', imageUpload.files[0]);
                 } else if (imageUrl && imageUrl.value.trim()) {
-                    console.log('Using image URL:', imageUrl.value.trim());
-                    formData.append('imageUrl', imageUrl.value.trim());
+                    const normalizedImageUrl = imageUrl.value.trim().match(/^(https?:\/\/|data:image\/)/i)
+                        ? imageUrl.value.trim()
+                        : `https://${imageUrl.value.trim()}`;
+                    console.log('Using image URL:', normalizedImageUrl);
+                    formData.append('imageUrl', normalizedImageUrl);
                 }
 
                 const response = await fetch('/api/messages', {
@@ -1026,7 +1085,7 @@
                     ${msg.image ? `<img src="${msg.image}" alt="Attached image" class="message-image" onclick="openImageModal('${msg.image}')" />` : ''}
                     <div class="message-footer">
                         <button class="like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike(${msg.id}, event)" title="Like this message" aria-label="Like message">
-                            <span class="heart-icon">${isLiked ? '❤️' : '🤍'}</span>
+                            <span class="heart-icon">${getLikeHeartIcon(isLiked)}</span>
                             <span class="like-count">${likesCount}</span>
                         </button>
                         <button class="reply-btn" onclick="toggleReplies(${msg.id}, event)" title="Reply to this message" aria-label="Reply to message">
@@ -1447,8 +1506,12 @@
                     // Update UI
                     const likeBtn = event.target.closest('.like-btn');
                     const countSpan = likeBtn.querySelector('.like-count');
+                    const heartSpan = likeBtn.querySelector('.heart-icon');
                     countSpan.textContent = data.likes;
                     likeBtn.classList.toggle('liked', !isLiked);
+                    if (heartSpan) {
+                        heartSpan.textContent = getLikeHeartIcon(!isLiked);
+                    }
                     
                     // Animate
                     likeBtn.style.transform = 'scale(1.2)';
