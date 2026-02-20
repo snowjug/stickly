@@ -32,6 +32,7 @@
         </div>
         <div class="nav-links">
             <button class="nav-btn active" data-section="all" onclick="switchSection('all')">All</button>
+            <button class="nav-btn" data-section="trending" onclick="switchSection('trending')">Trending</button>
             <button class="nav-btn" data-section="whistleblower" onclick="switchSection('whistleblower')">Whistleblower</button>
             <button class="nav-btn" data-section="controversy" onclick="switchSection('controversy')">Controversy</button>
             <button class="nav-btn" data-section="thoughts" onclick="switchSection('thoughts')">Thoughts</button>
@@ -606,14 +607,16 @@
 
             const titles = {
                 'all': { title: 'All Messages', subtitle: 'Anonymous messages from around the world' },
+                'trending': { title: 'Trending', subtitle: 'Most liked messages right now' },
                 'whistleblower': { title: 'Whistleblower', subtitle: 'Reveal the truth - Expose scams, corruption, and company secrets' },
                 'controversy': { title: 'Controversy', subtitle: 'Hot takes and heated debates' },
                 'thoughts': { title: 'Thoughts', subtitle: 'Random thoughts and musings' },
                 'confessions': { title: 'Confessions', subtitle: 'Anonymous secrets and stories' }
             };
 
-            document.getElementById('sectionTitle').textContent = titles[section].title;
-            document.getElementById('sectionSubtitle').textContent = titles[section].subtitle;
+            const sectionMeta = titles[section] || titles['all'];
+            document.getElementById('sectionTitle').textContent = sectionMeta.title;
+            document.getElementById('sectionSubtitle').textContent = sectionMeta.subtitle;
 
             // Trigger section-specific effects
             if (section === 'whistleblower') {
@@ -744,12 +747,19 @@
         // Load messages
         async function loadMessages() {
             try {
-                const url = currentSection === 'all' 
-                    ? '/api/messages' 
+                const url = (currentSection === 'all' || currentSection === 'trending')
+                    ? '/api/messages'
                     : `/api/messages?category=${currentSection}`;
                 
                 const response = await fetch(url);
-                const messages = await response.json();
+                let messages = await response.json();
+
+                if (currentSection === 'trending') {
+                    messages = messages
+                        .slice()
+                        .sort((a, b) => (b.likes || 0) - (a.likes || 0));
+                }
+
                 allMessages = messages; // Store for filtering
                 displayMessages(messages);
                 updateMessageCounts();
@@ -883,7 +893,9 @@
             if (filteredMessages.length === 0) {
                 const noMsgText = searchQuery 
                     ? `No messages found matching "${searchQuery}"`
-                    : 'No messages in this category yet. Be the first to share!';
+                    : (currentSection === 'trending'
+                        ? 'No trending messages yet. Get likes to trend!'
+                        : 'No messages in this category yet. Be the first to share!');
                 messagesList.innerHTML = `<div class="no-messages">${noMsgText}</div>`;
                 return;
             }
@@ -952,7 +964,7 @@
                             <span class="message-avatar">${avatar}</span>
                             <div class="message-user-meta">
                                 <span class="message-username">${escapeHtml(username)}</span>
-                                <span class="category-badge">${categoryEmojis[msg.category]} ${msg.category}</span>
+                                <span class="category-badge"><span class="badge-emoji">${categoryEmojis[msg.category]}</span><span class="badge-text">${msg.category}</span></span>
                             </div>
                         </div>
                         <div class="message-actions">
