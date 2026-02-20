@@ -64,6 +64,7 @@ let messageReports = {}; // Track reports per message: { messageId: [reasons] }
 
 // Middleware to measure metrics
 app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   /* const end = httpRequestDuration.startTimer();
   res.on('finish', () => {
     httpRequestCount.labels(req.method, req.path, res.statusCode).inc();
