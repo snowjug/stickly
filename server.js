@@ -133,7 +133,7 @@ app.post('/api/messages', upload.single('image'), (req, res) => {
         return res.status(400).json({ error: 'Message contains offensive content. Please keep the community safe.' });
     }
     
-    const validCategories = ['whistleblower', 'knowledge', 'thoughts', 'confessions'];
+    const validCategories = ['whistleblower', 'controversy', 'thoughts', 'confessions', 'others'];
     const messageCategory = validCategories.includes(category) ? category : 'thoughts';
     
     // Handle image - either from file upload or URL
@@ -155,7 +155,8 @@ app.post('/api/messages', upload.single('image'), (req, res) => {
         image: imageDataUrl,
         likes: 0,
         username: username || 'Anonymous',
-        avatar: avatar || '👤'
+        avatar: avatar || '👤',
+        replies: []
     };
     
     messages.unshift(newMessage); // Add to beginning of array
@@ -222,6 +223,40 @@ app.post('/api/messages/:id/unlike', (req, res) => {
     res.json({ likes: messageLikes[messageId] || 0 });
 });
 
+// Reply to a message
+app.post('/api/messages/:id/reply', (req, res) => {
+    const messageId = parseInt(req.params.id);
+    const { text, username, avatar } = req.body;
+    const message = messages.find(msg => msg.id === messageId);
+
+    if (!message) {
+        return res.status(404).json({ error: 'Message not found' });
+    }
+
+    if (!text || text.trim() === '') {
+        return res.status(400).json({ error: 'Reply text is required' });
+    }
+
+    if (containsOffensiveContent(text)) {
+        return res.status(400).json({ error: 'Reply contains offensive content. Please keep the community safe.' });
+    }
+
+    if (!message.replies) {
+        message.replies = [];
+    }
+
+    const reply = {
+        id: Date.now(),
+        text: text.trim(),
+        username: username || 'Anonymous',
+        avatar: avatar || '👤',
+        timestamp: new Date().toISOString()
+    };
+
+    message.replies.push(reply);
+    res.status(201).json(reply);
+});
+
 // Report a message
 app.post('/api/messages/:id/report', (req, res) => {
     const messageId = parseInt(req.params.id);
@@ -270,9 +305,10 @@ app.get('/api/messages/counts', (req, res) => {
     const counts = {
         all: messages.length,
         whistleblower: messages.filter(m => m.category === 'whistleblower').length,
-        knowledge: messages.filter(m => m.category === 'knowledge').length,
+        controversy: messages.filter(m => m.category === 'controversy').length,
         thoughts: messages.filter(m => m.category === 'thoughts').length,
-        confessions: messages.filter(m => m.category === 'confessions').length
+        confessions: messages.filter(m => m.category === 'confessions').length,
+        others: messages.filter(m => m.category === 'others').length
     };
     res.json(counts);
 });

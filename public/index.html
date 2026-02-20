@@ -918,9 +918,33 @@
                 
                 const isLiked = likedMessages.includes(msg.id);
                 const likesCount = msg.likes || 0;
+                const repliesCount = msg.replies ? msg.replies.length : 0;
                 
                 const username = msg.username || 'Anonymous';
                 const avatar = msg.avatar || '👤';
+
+                const repliesList = (msg.replies || []).map(r => `
+                    <div class="reply-item">
+                        <div class="reply-header">
+                            <span>${r.avatar || '👤'}</span>
+                            <span style="font-weight: 500;">${escapeHtml(r.username || 'Anonymous')}</span>
+                            <span style="opacity: 0.6;">• ${getTimeAgo(new Date(r.timestamp))}</span>
+                        </div>
+                        <div class="reply-content">${escapeHtml(r.text)}</div>
+                    </div>
+                `).join('');
+
+                const inlineRepliesHtml = `
+                    <div id="replies-${msg.id}" class="replies-wrapper">
+                        <div class="replies-list">${repliesList}</div>
+                        <div class="reply-input-container">
+                            <input type="text" id="reply-input-${msg.id}" class="reply-input" placeholder="Write a reply..." autocomplete="off" onkeypress="if(event.key === 'Enter') submitReply(${msg.id})">
+                            <button class="reply-send-btn" onclick="submitReply(${msg.id})" title="Send reply">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
                 
                 card.innerHTML = `
                     <div class="message-header">
@@ -943,9 +967,14 @@
                             <span class="heart-icon">${isLiked ? '❤️' : '🤍'}</span>
                             <span class="like-count">${likesCount}</span>
                         </button>
+                        <button class="reply-btn" onclick="toggleReplies(${msg.id}, event)" title="Reply to this message">
+                            <span>💬</span>
+                            <span>${repliesCount}</span>
+                        </button>
                         <button class="share-btn" onclick="shareMessage(${msg.id}, event)" title="Share this message">🔗</button>
                         <button class="report-btn" onclick="openReportModal(${msg.id}, event)" title="Report this message">🚩</button>
                     </div>
+                    ${inlineRepliesHtml}
                 `;
                 
                 fragment.appendChild(card);
@@ -1134,19 +1163,84 @@
             return `${days}d ago`;
         }
 
-        // Image modal functions
-        function openImageModal(imageSrc) {
-            const modal = document.getElementById('imageModal');
-            const modalImg = document.getElementById('modalImage');
-            modal.classList.add('active');
-            modalImg.src = imageSrc;
-            document.body.style.overflow = 'hidden';
+        function toggleReplies(messageId, event) {
+            if (event) event.stopPropagation();
+            const repliesDiv = document.getElementById(`replies-${messageId}`);
+            const card = repliesDiv ? repliesDiv.closest('.message-card') : null;
+
+            if (!repliesDiv) return;
+
+            if (repliesDiv.classList.contains('expanded')) {
+                repliesDiv.classList.remove('expanded');
+                if (card) card.classList.remove('expanded-card');
+                setTimeout(() => {
+                    repliesDiv.style.display = 'none';
+                }, 200);
+                return;
+            }
+
+            repliesDiv.style.display = 'block';
+            requestAnimationFrame(() => repliesDiv.classList.add('expanded'));
+            if (card) card.classList.add('expanded-card');
+
+            const input = document.getElementById(`reply-input-${messageId}`);
+            if (input) {
+                setTimeout(() => input.focus(), 120);
+            }
         }
 
-        function closeImageModal() {
-            const modal = document.getElementById('imageModal');
-            modal.classList.remove('active');
-            document.body.style.overflow = '';
+        async function submitReply(messageId) {
+            const input = document.getElementById(`reply-input-${messageId}`);
+            if (!input) return;
+
+            const text = input.value.trim();
+            if (!text) {
+                input.focus();
+                return;
+            }
+
+            const profile = getUserProfile();
+
+            try {
+                const response = await fetch(`/api/messages/${messageId}/reply`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text,
+                        username: profile.username,
+                        avatar: profile.avatar
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    alert(error.error || 'Failed to post reply');
+                    return;
+                }
+
+                const updatedReply = await response.json();
+                const msgIndex = allMessages.findIndex(m => m.id === messageId);
+                if (msgIndex !== -1) {
+                    if (!allMessages[msgIndex].replies) allMessages[msgIndex].replies = [];
+                    allMessages[msgIndex].replies.push(updatedReply);
+                }
+
+                input.value = '';
+                displayMessages(allMessages);
+
+                setTimeout(() => {
+                    const reopened = document.getElementById(`replies-${messageId}`);
+                    const card = reopened ? reopened.closest('.message-card') : null;
+                    if (reopened) {
+                        reopened.style.display = 'block';
+                        reopened.classList.add('expanded');
+                    }
+                    if (card) card.classList.add('expanded-card');
+                }, 0);
+            } catch (error) {
+                console.error('Error posting reply:', error);
+                alert('Error posting reply');
+            }
         }
 
         // Image modal functions
@@ -1243,7 +1337,8 @@
         }
 
         function startDrag(e) {
-            if (e.target.tagName === 'A' || e.target.closest('a')) return;
+            const interactiveSelector = 'a, button, input, textarea, select, label, .reply-input-container, .replies-wrapper';
+            if (e.target.closest(interactiveSelector)) return;
             
             isDragging = true;
             draggedCard = e.currentTarget;
