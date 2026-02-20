@@ -1179,11 +1179,13 @@ body.dark-mode #messageInput:focus {
 .message-card {
     background: var(--card-background);
     backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+        flex-wrap: nowrap;
+        justify-content: space-between;
     padding: 1.75rem;
     border-radius: 18px;
     border: 1px solid var(--border-color);
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04), 0 8px 32px rgba(0, 0, 0, 0.02);
+    .reply-btn,
     display: flex;
     flex-direction: column;
     transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
@@ -1195,6 +1197,8 @@ body.dark-mode #messageInput:focus {
     overflow: hidden;
     animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards, hang 3s ease-in-out 0.5s infinite;
     cursor: grab;
+        justify-content: center;
+        flex: 1 1 0;
     user-select: none;
 }
 
@@ -1464,9 +1468,24 @@ body.dark-mode .message-card:hover::before {
 .message-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1rem;
-    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.9rem;
+    gap: 0.8rem;
+}
+
+.message-user-block {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.message-user-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
 }
 
 .message-avatar {
@@ -1491,12 +1510,17 @@ body.dark-mode .message-avatar {
     font-weight: 600;
     color: var(--text-color);
     line-height: 1.2;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    word-break: break-word;
 }
 
 .message-actions {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.45rem;
+    flex-shrink: 0;
 }
 
 .delete-btn {
@@ -1543,6 +1567,7 @@ body.dark-mode .message-avatar {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border: 1px solid var(--border-color);
     letter-spacing: 0.3px;
+    align-self: flex-start;
 }
 
 .message-card:hover .category-badge {
@@ -1563,12 +1588,14 @@ body.dark-mode .message-avatar {
 
 .message-text {
     flex: 1;
-    font-size: 1.05rem;
-    line-height: 1.7;
+    font-size: 1rem;
+    line-height: 1.6;
     word-wrap: break-word;
+    word-break: break-word;
+    white-space: pre-wrap;
     color: var(--text-color);
     font-weight: 500;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
 }
 
 .no-messages {
@@ -1615,6 +1642,8 @@ body.dark-mode .message-avatar {
     padding-top: 1rem;
     border-top: 1px solid var(--border-color);
     align-items: center;
+    flex-wrap: nowrap;
+    justify-content: space-between;
 }
 
 .like-btn,
@@ -1624,7 +1653,8 @@ body.dark-mode .message-avatar {
     background: var(--card-background);
     border: 1.5px solid var(--border-color);
     border-radius: 24px;
-    padding: 0.5rem 1rem;
+    padding: 0.48rem 0.9rem;
+    min-height: 38px;
     cursor: pointer;
     font-size: 0.9rem;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1633,6 +1663,23 @@ body.dark-mode .message-avatar {
     gap: 0.4rem;
     color: var(--text-color);
     font-weight: 600;
+    line-height: 1;
+    flex: 1 1 0;
+    justify-content: center;
+    min-width: 0;
+}
+
+.like-btn .heart-icon,
+.reply-btn span:first-child,
+.share-btn,
+.report-btn {
+    font-size: 1rem;
+}
+
+.like-count,
+.reply-btn span:last-child {
+    min-width: 1.3ch;
+    text-align: center;
 }
 
 .like-btn:hover {
@@ -1703,8 +1750,8 @@ body,
 
 .replies-wrapper {
     display: none;
-    margin-top: 0.9rem;
-    padding-left: 1rem;
+    margin-top: 0.95rem;
+    padding-left: 0.95rem;
     border-left: 2px solid var(--border-color);
     opacity: 0;
     transform: translateY(-6px);
@@ -1719,16 +1766,16 @@ body,
 .replies-list {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
+    gap: 0.6rem;
+    margin-bottom: 0.8rem;
 }
 
 .reply-item {
     position: relative;
     background: var(--background-color);
     border: 1px solid var(--border-color);
-    border-radius: 10px;
-    padding: 0.65rem 0.75rem;
+    border-radius: 11px;
+    padding: 0.7rem 0.8rem;
 }
 
 .reply-item::before {
@@ -1743,10 +1790,25 @@ body,
 .reply-header {
     display: flex;
     align-items: center;
-    gap: 0.45rem;
+    gap: 0.42rem;
     margin-bottom: 0.35rem;
     font-size: 0.8rem;
     color: var(--subtle-text-color);
+    flex-wrap: wrap;
+}
+
+.reply-avatar {
+    font-size: 0.95rem;
+    line-height: 1;
+}
+
+.reply-author {
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.reply-time {
+    opacity: 0.75;
 }
 
 .reply-content {
@@ -1757,7 +1819,7 @@ body,
 
 .reply-input-container {
     display: flex;
-    gap: 0.45rem;
+    gap: 0.55rem;
     align-items: center;
     position: relative;
     z-index: 2;
@@ -1769,8 +1831,9 @@ body,
     background: var(--card-background);
     color: var(--text-color);
     border-radius: 18px;
-    padding: 0.5rem 0.8rem;
+    padding: 0.58rem 0.85rem;
     font-size: 0.9rem;
+    line-height: 1.3;
 }
 
 .reply-input:focus {
@@ -2233,15 +2296,19 @@ body,
     }
 
     .message-footer {
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+        justify-content: space-between;
         gap: 0.4rem;
     }
 
     .like-btn,
+    .reply-btn,
     .share-btn,
     .report-btn {
         padding: 0.5rem 0.7rem;
         font-size: 0.85rem;
+        flex: 1 1 0;
+        justify-content: center;
     }
 
     /* Hide animations on mobile for better performance */
@@ -2629,6 +2696,7 @@ body,
 
 .message-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
     gap: 0.75rem;
     margin-bottom: 1rem;

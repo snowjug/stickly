@@ -926,9 +926,9 @@
                 const repliesList = (msg.replies || []).map(r => `
                     <div class="reply-item">
                         <div class="reply-header">
-                            <span>${r.avatar || '👤'}</span>
-                            <span style="font-weight: 500;">${escapeHtml(r.username || 'Anonymous')}</span>
-                            <span style="opacity: 0.6;">• ${getTimeAgo(new Date(r.timestamp))}</span>
+                            <span class="reply-avatar">${r.avatar || '👤'}</span>
+                            <span class="reply-author">${escapeHtml(r.username || 'Anonymous')}</span>
+                            <span class="reply-time">• ${getTimeAgo(new Date(r.timestamp))}</span>
                         </div>
                         <div class="reply-content">${escapeHtml(r.text)}</div>
                     </div>
@@ -948,11 +948,11 @@
                 
                 card.innerHTML = `
                     <div class="message-header">
-                        <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1;">
+                        <div class="message-user-block">
                             <span class="message-avatar">${avatar}</span>
-                            <div style="display: flex; flex-direction: column;">
+                            <div class="message-user-meta">
                                 <span class="message-username">${escapeHtml(username)}</span>
-                                <span class="category-badge" style="margin-top: 0.25rem;">${categoryEmojis[msg.category]} ${msg.category}</span>
+                                <span class="category-badge">${categoryEmojis[msg.category]} ${msg.category}</span>
                             </div>
                         </div>
                         <div class="message-actions">
