@@ -850,7 +850,12 @@
                     postBtn.textContent = '✗ Failed';
                     postBtn.style.background = 'linear-gradient(135deg, #ff4444, #cc0000)';
                     await new Promise(resolve => setTimeout(resolve, 1500));
-                    alert('Error posting message. Please try again.');
+                    
+                    if (error.error) {
+                        alert(error.error);
+                    } else {
+                        alert('Error posting message. Please try again.');
+                    }
                 }
             } catch (error) {
                 console.error('Error posting message:', error);
