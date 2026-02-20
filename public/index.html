@@ -97,6 +97,7 @@
                         <input type="checkbox" id="postAsUser" onchange="toggleUserInfo()">
                         <span class="checkbox-label">Post with my profile</span>
                     </label>
+                    <div class="profile-note">Use a clean username + avatar style for posting.</div>
                     <div id="userInfoDisplay" class="user-info-display" style="display: none;">
                         <div class="user-profile-editor">
                             <div class="user-avatar-selector" onclick="openEmojiPicker()">
@@ -115,9 +116,7 @@
                                 <div class="username-hint">Max 20 characters</div>
                             </div>
                         </div>
-                        <button class="save-profile-btn" onclick="savePostProfile()">
-                            💾 Save to Profile
-                        </button>
+                        <button class="save-profile-btn" onclick="savePostProfile()">Save Profile</button>
                     </div>
                 </div>
                 
@@ -779,8 +778,8 @@
             }, 2200);
         }
 
-        // Common emoji list for avatars
-        const avatarEmojis = ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','���','🥰','😍','🤩','😘','😗','☺️','😚','😙','🥲','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🤧','🥵','🥶','🥴','😵','🤯','🤠','🥳','🥸','😎','🤓','🧐','😕','😟','🙁','☹️','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','☠️','💩','🤡','👹','👺','👻','👽','👾','🤖','😺','😸','😹','😻','😼','😽','🙀','😿','😾','🙈','🙉','🙊','💋','💌','💘','💝','💖','💗','💓','💞','💕','💟','❣️','💔','❤️','🧡','💛','💚','💙','💜','🤎','🖤','🤍','💯','💢','💥','💫','💦','💨','🕳️','💣','💬','👁️','🗨️','🗯️','💭','💤','👋','🤚','🖐️','✋','🖖','👌','🤌','🤏','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','👍','👎','✊','👊','🤛','🤜','👏','🙌','👐','🤲','🤝','🙏','✍️','💅','🤳','💪','🦾','🦿','🦵','🦶','👂','🦻','👃','🧠','🫀','🫁','🦷','🦴','👀','👁️','👅','👄','🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐦','🐤','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🪱','🐛','🦋','🐌','🐞','🐜','🪰','🪲','🪳','🦟','🦗','🕷️','🕸️','🦂','🐢','🐍','🦎','🦖','🦕','🐙','🦑','🦐','🦞','🦀','🐡','🐠','🐟','🐬','🐳','🐋','🦈','🐊','🐅','🐆','🦓','🦍','🦧','🦣','🐘','🦛','🦏','🐪','🐫','🦒','🦘','🦬','🐃','🐂','🐄','🐎','🐖','🐏','🐑','🦙','🐐','🦌','🐕','🐩','🦮','🐕‍🦺','🐈','🐈‍⬛','🪶','🐓','🦃','🦤','🦚','🦜','🦢','🦩','🕊️','🐇','🦝','🦨','🦡','🦫','🦦','🦥','🐁','🐀','🐿️','🦔','🌵','🎄','🌲','🌳','🌴','🌱','🌿','☘️','🍀','🎍','🎋','🍃','🍂','🍁','🍄','🐚','🌾','💐','🌷','🌹','🥀','🌺','🌸','🌼','🌻','🌞','🌝','🌛','🌜','🌚','🌕','🌖','🌗','🌘','🌑','🌒','🌓','🌔','🌙','🌎','🌍','🌏','🪐','💫','⭐','🌟','✨','⚡','☄️','💥','🔥','🌪️','🌈','☀️','🌤️','⛅','🌥️','☁️','🌦️','🌧️','⛈️','🌩️','🌨️','❄️','☃️','⛄','🌬️','💨','💧','💦','☔','☂️','🌊','🌫️'];
+        // Curated compact avatar list for cleaner profile posting UI
+        const avatarEmojis = ['👤','🙂','😎','🤠','🧠','🧑‍💻','👩‍💻','🕵️','🎯','🚀','🌟','⚡','🔥','💼','📌','🎵','🎨','🧩','🧭','🦊','🐼','🐯','🐙','🦄'];
 
         // Toggle user info display
         function toggleUserInfo() {
@@ -1071,13 +1070,27 @@
 
             const fragment = document.createDocumentFragment();
 
+            const withAt = (name) => {
+                const cleaned = (name || 'Anonymous').replace(/^@+/, '');
+                return `@${escapeHtml(cleaned)}`;
+            };
+
             filteredMessages.forEach((msg, index) => {
                 const timeAgo = getTimeAgo(new Date(msg.timestamp));
 
                 const card = document.createElement('div');
                 card.className = 'message-card';
                 card.setAttribute('data-category', msg.category);
+                card.setAttribute('data-message-id', String(msg.id));
                 card.style.animationDelay = `${index * 0.04}s`;
+
+                const savedOffset = cardDragOffsets[msg.id];
+                if (savedOffset) {
+                    card.style.setProperty('--drag-x', `${savedOffset.x}px`);
+                    card.style.setProperty('--drag-y', `${savedOffset.y}px`);
+                    card.dataset.dragX = String(savedOffset.x);
+                    card.dataset.dragY = String(savedOffset.y);
+                }
                 
                 const isLiked = likedMessages.includes(msg.id);
                 const likesCount = msg.likes || 0;
@@ -1091,7 +1104,7 @@
                     <div class="reply-item">
                         <div class="reply-header">
                             <span class="reply-avatar">${r.avatar || '👤'}</span>
-                            <span class="reply-author">${escapeHtml(r.username || 'Anonymous')}</span>
+                            <span class="reply-author">${withAt(r.username || 'Anonymous')}</span>
                             <span class="reply-time">• ${getTimeAgo(new Date(r.timestamp))}</span>
                         </div>
                         <div class="reply-content">${escapeHtml(r.text)}</div>
@@ -1115,13 +1128,15 @@
                         <div class="message-user-block">
                             <span class="message-avatar">${avatar}</span>
                             <div class="message-user-meta">
-                                <span class="message-username">${escapeHtml(username)}</span>
-                                <span class="category-badge"><span class="badge-emoji">${categoryEmojis[msg.category]}</span><span class="badge-text">${msg.category}</span></span>
+                                <span class="message-username">${withAt(username)}</span>
+                                <div class="message-meta-row">
+                                    <span class="category-badge"><span class="badge-emoji">${categoryEmojis[msg.category]}</span><span class="badge-text">${msg.category}</span></span>
+                                    <span class="message-time">${timeAgo}</span>
+                                    ${msg.expiresAt ? `<span class="expires-badge" data-expires-at="${msg.expiresAt}">${expiresBadgeText}</span>` : ''}
+                                </div>
                             </div>
                         </div>
                         <div class="message-actions">
-                            <span class="message-time">${timeAgo}</span>
-                            ${msg.expiresAt ? `<span class="expires-badge" data-expires-at="${msg.expiresAt}">${expiresBadgeText}</span>` : ''}
                             <button class="delete-btn" onclick="deleteMessage(${msg.id})" title="Delete message" aria-label="Delete message">×</button>
                         </div>
                     </div>
@@ -1149,6 +1164,8 @@
             messagesList.appendChild(fragment);
             messagesList.style.minHeight = 'auto';
             updateExpiryBadges();
+
+            document.querySelectorAll('.message-card').forEach(makeDraggable);
         }
 
         // Confetti animation
@@ -1469,52 +1486,81 @@
         // Draggable message cards (optimized)
         let isDragging = false;
         let draggedCard = null;
-        let offsetX = 0;
-        let offsetY = 0;
+        let dragStartMouseX = 0;
+        let dragStartMouseY = 0;
+        let dragStartCardX = 0;
+        let dragStartCardY = 0;
+        let dragBaseRect = null;
+        let dragContainerRect = null;
+        const cardDragOffsets = {};
 
         function makeDraggable(card) {
             card.addEventListener('mousedown', startDrag);
         }
 
         function startDrag(e) {
+            if (window.matchMedia('(max-width: 768px)').matches) return;
+
             const interactiveSelector = 'a, button, input, textarea, select, label, .reply-input-container, .replies-wrapper';
             if (e.target.closest(interactiveSelector)) return;
             
             isDragging = true;
             draggedCard = e.currentTarget;
             draggedCard.classList.add('dragging');
-            
-            const rect = draggedCard.getBoundingClientRect();
-            const container = document.getElementById('messagesList').getBoundingClientRect();
-            
-            offsetX = e.clientX - rect.left;
-            offsetY = e.clientY - rect.top;
+
+            dragStartMouseX = e.clientX;
+            dragStartMouseY = e.clientY;
+            dragStartCardX = parseFloat(draggedCard.dataset.dragX || '0');
+            dragStartCardY = parseFloat(draggedCard.dataset.dragY || '0');
+            dragBaseRect = draggedCard.getBoundingClientRect();
+            dragContainerRect = document.getElementById('messagesList').getBoundingClientRect();
             
             e.preventDefault();
         }
 
         function onMouseMove(e) {
             if (!isDragging || !draggedCard) return;
-            
-            const container = document.getElementById('messagesList');
-            const containerRect = container.getBoundingClientRect();
-            
-            let newX = e.clientX - containerRect.left - offsetX;
-            let newY = e.clientY - containerRect.top - offsetY;
-            
-            // Keep within container bounds
-            newX = Math.max(0, Math.min(newX, containerRect.width - draggedCard.offsetWidth));
-            newY = Math.max(0, Math.min(newY, containerRect.height - draggedCard.offsetHeight));
-            
-            draggedCard.style.left = newX + 'px';
-            draggedCard.style.top = newY + 'px';
+
+            const deltaX = e.clientX - dragStartMouseX;
+            const deltaY = e.clientY - dragStartMouseY;
+
+            let targetLeft = dragBaseRect.left + deltaX;
+            let targetTop = dragBaseRect.top + deltaY;
+
+            const minLeft = dragContainerRect.left;
+            const maxLeft = dragContainerRect.right - dragBaseRect.width;
+            const minTop = dragContainerRect.top;
+            const maxTop = dragContainerRect.bottom - dragBaseRect.height;
+
+            targetLeft = Math.max(minLeft, Math.min(targetLeft, maxLeft));
+            targetTop = Math.max(minTop, Math.min(targetTop, maxTop));
+
+            const adjustedDeltaX = targetLeft - dragBaseRect.left;
+            const adjustedDeltaY = targetTop - dragBaseRect.top;
+
+            const newX = dragStartCardX + adjustedDeltaX;
+            const newY = dragStartCardY + adjustedDeltaY;
+
+            draggedCard.style.setProperty('--drag-x', `${newX}px`);
+            draggedCard.style.setProperty('--drag-y', `${newY}px`);
+            draggedCard.dataset.dragX = String(newX);
+            draggedCard.dataset.dragY = String(newY);
         }
 
         function onMouseUp() {
             if (isDragging && draggedCard) {
+                const messageId = draggedCard.dataset.messageId;
+                if (messageId) {
+                    cardDragOffsets[messageId] = {
+                        x: parseFloat(draggedCard.dataset.dragX || '0'),
+                        y: parseFloat(draggedCard.dataset.dragY || '0')
+                    };
+                }
                 draggedCard.classList.remove('dragging');
                 isDragging = false;
                 draggedCard = null;
+                dragBaseRect = null;
+                dragContainerRect = null;
             }
         }
 
