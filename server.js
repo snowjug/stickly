@@ -2,30 +2,13 @@ const express = require('express');
 const path = require('path');
 const multer = require('multer');
 
-// Image processing and NSFW detection
-const tf = require('@tensorflow/tfjs-node');
-const nsfw = require('nsfwjs');
-const jpeg = require('jpeg-js');
-const png = require('pngjs').PNG;
-
-let nsfwModel;
-// Load the NSFW model
-(async () => {
-    try {
-        nsfwModel = await nsfw.load();
-        console.log("NSFW Model loaded");
-    } catch (err) {
-        console.error("Failed to load NSFW model:", err);
-    }
-})();
-
 // Prometheus metrics
-const client = require('prom-client');
-const collectDefaultMetrics = client.collectDefaultMetrics;
-collectDefaultMetrics();
+// const client = require('prom-client');
+// const collectDefaultMetrics = client.collectDefaultMetrics;
+// collectDefaultMetrics();
 
 // Create custom metrics
-const httpRequestCount = new client.Counter({
+/* const httpRequestCount = new client.Counter({
   name: 'http_requests_total',
   help: 'Total number of HTTP requests',
   labelNames: ['method', 'route', 'status'],
@@ -36,7 +19,7 @@ const httpRequestDuration = new client.Histogram({
   help: 'HTTP request duration in seconds',
   labelNames: ['method', 'route', 'status'],
   buckets: [0.005, 0.01, 0.05, 0.1, 0.25, 0.5, 1, 2, 5],
-});
+}); */
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -52,13 +35,6 @@ const OFFENSIVE_WORDS = require('./offensive-words.json');
 function containsOffensiveContent(text) {
     if (!text) return false;
     const lowerText = text.toLowerCase();
-    
-    // Check for links
-    const urlPattern = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.(com|org|net|edu|gov|mil|int|info|biz|io|co|me)\b)/i;
-    if (urlPattern.test(text)) {
-        return true;
-    }
-
     return OFFENSIVE_WORDS.some(word => lowerText.includes(word));
 }
 
@@ -81,42 +57,6 @@ const upload = multer({
     }
 });
 
-// Helper function to decode image buffer
-async function decodeImage(buffer, mimeType) {
-    if (mimeType === 'image/jpeg' || mimeType === 'image/jpg') {
-        const image = jpeg.decode(buffer, { useTArray: true });
-        const numChannels = 3;
-        const numPixels = image.width * image.height;
-        const values = new Int32Array(numPixels * numChannels);
-
-        for (let i = 0; i < numPixels; i++) {
-            for (let c = 0; c < numChannels; c++) {
-                values[i * numChannels + c] = image.data[i * 4 + c];
-            }
-        }
-        return tf.tensor3d(values, [image.height, image.width, numChannels], 'int32');
-    } else if (mimeType === 'image/png') {
-        return new Promise((resolve, reject) => {
-            new png().parse(buffer, (err, image) => {
-                if (err) return reject(err);
-                
-                const numChannels = 3;
-                const numPixels = image.width * image.height;
-                const values = new Int32Array(numPixels * numChannels);
-                
-                for (let i = 0; i < numPixels; i++) {
-                    for (let c = 0; c < numChannels; c++) {
-                        values[i * numChannels + c] = image.data[i * 4 + c];
-                    }
-                }
-                resolve(tf.tensor3d(values, [image.height, image.width, numChannels], 'int32'));
-            });
-        });
-    } else {
-        throw new Error('Unsupported image format for NSFW check');
-    }
-}
-
 // Stores the messages in memory (resets when server restarts !!)
 let messages = [];
 let messageLikes = {}; // Track likes per message: { messageId: count }
@@ -124,11 +64,11 @@ let messageReports = {}; // Track reports per message: { messageId: [reasons] }
 
 // Middleware to measure metrics
 app.use((req, res, next) => {
-  const end = httpRequestDuration.startTimer();
+  /* const end = httpRequestDuration.startTimer();
   res.on('finish', () => {
     httpRequestCount.labels(req.method, req.path, res.statusCode).inc();
     end({ method: req.method, route: req.path, status: res.statusCode });
-  });
+  }); */
   next();
 });
 
@@ -180,7 +120,7 @@ app.post('/api/admin/check', (req, res) => {
 });
 
 // Post a new message with optional image
-app.post('/api/messages', upload.single('image'), async (req, res) => {
+app.post('/api/messages', upload.single('image'), (req, res) => {
     const { message, category, imageUrl, username, avatar } = req.body;
     
     // Allow posting if either message, file, or URL is present
@@ -189,44 +129,9 @@ app.post('/api/messages', upload.single('image'), async (req, res) => {
     }
 
     if (containsOffensiveContent(message)) {
-        return res.status(400).json({ error: 'Message contains offensive content or links. Please keep the community safe.' });
+        return res.status(400).json({ error: 'Message contains offensive content. Please keep the community safe.' });
     }
     
-    // Check if filename contains offensive words
-    if (req.file) {
-        if (containsOffensiveContent(req.file.originalname)) {
-             return res.status(400).json({ error: 'Image filename contains offensive content.' });
-        }
-    }
-
-    // NSFW Check for uploaded images
-    if (req.file && nsfwModel) {
-        try {
-            const imageTensor = await decodeImage(req.file.buffer, req.file.mimetype);
-            const predictions = await nsfwModel.classify(imageTensor);
-            imageTensor.dispose(); // Prevent memory leaks
-            
-            // Check top probability
-            const topPrediction = predictions[0];
-            const blockedCategories = ['Porn', 'Hentai', 'Sexy'];
-            
-            // Block if probability > 60% for Porn/Hentai or > 80% for Sexy
-            const isPornOrHentai = (topPrediction.className === 'Porn' || topPrediction.className === 'Hentai') && topPrediction.probability > 0.6;
-            const isSexy = topPrediction.className === 'Sexy' && topPrediction.probability > 0.8;
-            
-            if (isPornOrHentai || isSexy) {
-                 return res.status(400).json({ error: 'Image content flagged as inappropriate.' });
-            }
-        } catch (err) {
-            console.error('NSFW Check failed:', err);
-             // Proceed cautiously or block if check fails? For now, we log and allow unless specific error strategy is desired.
-             // If unsupported format (like gif), we might just skip the check or block.
-             if (err.message === 'Unsupported image format for NSFW check') {
-                 // Skip check for unsupported formats (e.g. gif)
-             }
-        }
-    }
-
     const validCategories = ['whistleblower', 'knowledge', 'thoughts', 'confessions'];
     const messageCategory = validCategories.includes(category) ? category : 'thoughts';
     
@@ -374,8 +279,9 @@ app.get('/api/messages/counts', (req, res) => {
 // Prometheus metrics endpoint
 app.get('/metrics', async (req, res) => {
     try {
-        res.set('Content-Type', client.register.contentType);
-        res.end(await client.register.metrics());
+        // res.set('Content-Type', client.register.contentType);
+        // res.end(await client.register.metrics());
+        res.status(501).send('Metrics disabled'); 
     } catch (err) {
         res.status(500).send(err.message);
     }
@@ -386,7 +292,22 @@ module.exports = app;
 
 // Start server locally
 if (require.main === module) {
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
         console.log(`Server is running on http://localhost:${PORT}`);
+    });
+
+    // Handle server errors
+    server.on('error', (err) => {
+        console.error('Server error:', err);
+    });
+
+    // Handle unhandled promise rejections
+    process.on('unhandledRejection', (reason, promise) => {
+        console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    });
+
+    // Handle uncaught exceptions
+    process.on('uncaughtException', (err) => {
+        console.error('Uncaught Exception:', err);
     });
 }
