@@ -137,6 +137,18 @@
                     placeholder="What's on your mind?"
                     maxlength="500"
                 ></textarea>
+
+                <div style="margin-top: 0.75rem; margin-bottom: 1rem;">
+                    <label for="autoDeleteSelect" style="display: block; margin-bottom: 0.35rem; color: var(--text-color); font-size: 0.92rem;">Disappearing message</label>
+                    <select id="autoDeleteSelect" class="admin-input" style="width: 100%;">
+                        <option value="1">Delete after 1 minute</option>
+                        <option value="30">Delete after 30 minutes</option>
+                        <option value="60">Delete after 1 hour</option>
+                        <option value="1440" selected>Delete after 24 hours</option>
+                        <option value="10080">Delete after 1 week</option>
+                    </select>
+                </div>
+
                 <div class="image-upload-section">
                     <label for="imageUpload" class="image-upload-label">
                         <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -587,7 +599,38 @@
             initFAB();
             initImageUpload();
             checkAdminStatus();
+            setInterval(updateExpiryBadges, 30000);
         };
+
+        function formatExpiresIn(expiresAt) {
+            if (!expiresAt) return '';
+
+            const remainingMs = new Date(expiresAt).getTime() - Date.now();
+            if (!Number.isFinite(remainingMs) || remainingMs <= 0) {
+                return '⏳ soon';
+            }
+
+            const totalMinutes = Math.ceil(remainingMs / 60000);
+
+            if (totalMinutes < 60) {
+                return `⏳ ${totalMinutes}m left`;
+            }
+
+            const totalHours = Math.ceil(totalMinutes / 60);
+            if (totalHours < 24) {
+                return `⏳ ${totalHours}h left`;
+            }
+
+            const totalDays = Math.ceil(totalHours / 24);
+            return `⏳ ${totalDays}d left`;
+        }
+
+        function updateExpiryBadges() {
+            document.querySelectorAll('.expires-badge').forEach((badge) => {
+                const expiresAt = badge.dataset.expiresAt;
+                badge.textContent = formatExpiresIn(expiresAt);
+            });
+        }
 
         // FAB collapse functionality
         function initFAB() {
@@ -826,10 +869,14 @@
                 messageInput.value = '';
                 const imageUpload = document.getElementById('imageUpload');
                 const imageUrl = document.getElementById('imageUrl');
+                const autoDeleteSelect = document.getElementById('autoDeleteSelect');
                 if (imageUpload) {
                     imageUpload.value = '';
                     imageUrl.value = '';
                     document.getElementById('imagePreview').innerHTML = '';
+                }
+                if (autoDeleteSelect) {
+                    autoDeleteSelect.value = '1440';
                 }
                 // Reset post as user checkbox
                 document.getElementById('postAsUser').checked = false;
@@ -879,6 +926,7 @@
             const messageText = messageInput.value.trim();
             const imageUpload = document.getElementById('imageUpload');
             const imageUrl = document.getElementById('imageUrl');
+            const autoDeleteSelect = document.getElementById('autoDeleteSelect');
             const modalContent = document.querySelector('.modal-content');
             const postBtn = document.getElementById('postBtn');
             
@@ -903,6 +951,10 @@
                 const formData = new FormData();
                 formData.append('message', messageText || '');
                 formData.append('category', selectedCategory);
+
+                if (autoDeleteSelect && autoDeleteSelect.value) {
+                    formData.append('autoDeleteMinutes', autoDeleteSelect.value);
+                }
                 
                 // Check if user wants to post with profile
                 const postAsUser = document.getElementById('postAsUser').checked;
@@ -1009,11 +1061,6 @@
                 return;
             }
 
-            const containerWidth = messagesList.offsetWidth || 1200;
-            const cardWidth = 300;
-            const gap = 40;
-            const cardsPerRow = Math.floor(containerWidth / (cardWidth + gap));
-
             const categoryEmojis = {
                 'whistleblower': '🔓',
                 'controversy': '⚡',
@@ -1023,23 +1070,19 @@
             };
 
             const fragment = document.createDocumentFragment();
-            const totalRows = Math.ceil(filteredMessages.length / cardsPerRow);
 
             filteredMessages.forEach((msg, index) => {
                 const timeAgo = getTimeAgo(new Date(msg.timestamp));
-                const row = Math.floor(index / cardsPerRow);
-                const col = index % cardsPerRow;
-                const left = col * (cardWidth + gap);
-                const top = row * (cardWidth + gap);
 
                 const card = document.createElement('div');
                 card.className = 'message-card';
                 card.setAttribute('data-category', msg.category);
-                card.style.cssText = `left: ${left}px; top: ${top}px; animation-delay: ${index * 0.05}s; width: ${cardWidth}px;`;
+                card.style.animationDelay = `${index * 0.04}s`;
                 
                 const isLiked = likedMessages.includes(msg.id);
                 const likesCount = msg.likes || 0;
                 const repliesCount = msg.replies ? msg.replies.length : 0;
+                const expiresBadgeText = msg.expiresAt ? formatExpiresIn(msg.expiresAt) : '';
                 
                 const username = msg.username || 'Anonymous';
                 const avatar = msg.avatar || '👤';
@@ -1078,6 +1121,7 @@
                         </div>
                         <div class="message-actions">
                             <span class="message-time">${timeAgo}</span>
+                            ${msg.expiresAt ? `<span class="expires-badge" data-expires-at="${msg.expiresAt}">${expiresBadgeText}</span>` : ''}
                             <button class="delete-btn" onclick="deleteMessage(${msg.id})" title="Delete message" aria-label="Delete message">×</button>
                         </div>
                     </div>
@@ -1103,10 +1147,8 @@
 
             messagesList.innerHTML = '';
             messagesList.appendChild(fragment);
-            messagesList.style.minHeight = (totalRows * (cardWidth + gap)) + 'px';
-
-            // Add effects
-            document.querySelectorAll('.message-card').forEach(makeDraggable);
+            messagesList.style.minHeight = 'auto';
+            updateExpiryBadges();
         }
 
         // Confetti animation

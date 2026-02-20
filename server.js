@@ -61,6 +61,30 @@ const upload = multer({
 let messages = [];
 let messageLikes = {}; // Track likes per message: { messageId: count }
 let messageReports = {}; // Track reports per message: { messageId: [reasons] }
+const AUTO_DELETE_MINUTES = new Set([1, 30, 60, 1440, 10080]);
+
+function purgeExpiredMessages() {
+    const now = Date.now();
+    const expiredMessageIds = [];
+
+    messages = messages.filter(message => {
+        if (!message.expiresAt) return true;
+
+        const expiresAtMs = new Date(message.expiresAt).getTime();
+        const isActive = Number.isFinite(expiresAtMs) && expiresAtMs > now;
+        if (!isActive) {
+            expiredMessageIds.push(message.id);
+        }
+        return isActive;
+    });
+
+    expiredMessageIds.forEach(messageId => {
+        delete messageLikes[messageId];
+        delete messageReports[messageId];
+    });
+}
+
+setInterval(purgeExpiredMessages, 30 * 1000);
 
 // Middleware to measure metrics
 app.use((req, res, next) => {
@@ -84,6 +108,7 @@ app.get('/', (req, res) => {
 
 // Get all messages or filter by category
 app.get('/api/messages', (req, res) => {
+    purgeExpiredMessages();
     const { category } = req.query;
     
     if (category && category !== 'all') {
@@ -122,7 +147,8 @@ app.post('/api/admin/check', (req, res) => {
 
 // Post a new message with optional image
 app.post('/api/messages', upload.single('image'), (req, res) => {
-    const { message, category, imageUrl, username, avatar } = req.body;
+    purgeExpiredMessages();
+    const { message, category, imageUrl, username, avatar, autoDeleteMinutes } = req.body;
     
     // Allow posting if either message, file, or URL is present
     if ((!message || message.trim() === '') && !req.file && (!imageUrl || !imageUrl.trim())) {
@@ -135,6 +161,16 @@ app.post('/api/messages', upload.single('image'), (req, res) => {
     
     const validCategories = ['whistleblower', 'controversy', 'thoughts', 'confessions', 'others'];
     const messageCategory = validCategories.includes(category) ? category : 'thoughts';
+
+    const parsedMinutes = (autoDeleteMinutes === undefined || autoDeleteMinutes === null || String(autoDeleteMinutes).trim() === '')
+        ? 1440
+        : parseInt(String(autoDeleteMinutes), 10);
+
+    if (!AUTO_DELETE_MINUTES.has(parsedMinutes)) {
+        return res.status(400).json({ error: 'Invalid auto-delete duration selected.' });
+    }
+
+    const expiresAt = new Date(Date.now() + parsedMinutes * 60 * 1000).toISOString();
     
     // Handle image - either from file upload or URL
     let imageDataUrl = null;
@@ -156,6 +192,7 @@ app.post('/api/messages', upload.single('image'), (req, res) => {
         likes: 0,
         username: username || 'Anonymous',
         avatar: avatar || '👤',
+        expiresAt,
         replies: []
     };
     
@@ -165,6 +202,7 @@ app.post('/api/messages', upload.single('image'), (req, res) => {
 
 // Delete a message (admin only)
 app.delete('/api/messages/:id', (req, res) => {
+    purgeExpiredMessages();
     const { sessionId } = req.body;
     
     // Check if user is admin
@@ -188,6 +226,7 @@ app.delete('/api/messages/:id', (req, res) => {
 
 // Like a message
 app.post('/api/messages/:id/like', (req, res) => {
+    purgeExpiredMessages();
     const messageId = parseInt(req.params.id);
     const message = messages.find(msg => msg.id === messageId);
     
@@ -208,6 +247,7 @@ app.post('/api/messages/:id/like', (req, res) => {
 
 // Unlike a message
 app.post('/api/messages/:id/unlike', (req, res) => {
+    purgeExpiredMessages();
     const messageId = parseInt(req.params.id);
     const message = messages.find(msg => msg.id === messageId);
     
@@ -225,6 +265,7 @@ app.post('/api/messages/:id/unlike', (req, res) => {
 
 // Reply to a message
 app.post('/api/messages/:id/reply', (req, res) => {
+    purgeExpiredMessages();
     const messageId = parseInt(req.params.id);
     const { text, username, avatar } = req.body;
     const message = messages.find(msg => msg.id === messageId);
@@ -259,6 +300,7 @@ app.post('/api/messages/:id/reply', (req, res) => {
 
 // Report a message
 app.post('/api/messages/:id/report', (req, res) => {
+    purgeExpiredMessages();
     const messageId = parseInt(req.params.id);
     const { reason } = req.body;
     const message = messages.find(msg => msg.id === messageId);
@@ -281,6 +323,7 @@ app.post('/api/messages/:id/report', (req, res) => {
 
 // Get reported messages (admin only)
 app.post('/api/admin/reports', (req, res) => {
+    purgeExpiredMessages();
     const { sessionId } = req.body;
     
     if (!adminSessions.has(sessionId)) {
@@ -302,6 +345,7 @@ app.post('/api/admin/reports', (req, res) => {
 
 // Get message counts by category
 app.get('/api/messages/counts', (req, res) => {
+    purgeExpiredMessages();
     const counts = {
         all: messages.length,
         whistleblower: messages.filter(m => m.category === 'whistleblower').length,

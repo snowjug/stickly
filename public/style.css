@@ -1137,6 +1137,10 @@ body.dark-mode #messageInput:focus {
 /* Messages Grid */
 #messagesList {
     position: relative;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.1rem;
+    align-items: start;
     flex: 1;
     width: 100%;
     min-height: 400px;
@@ -1179,27 +1183,20 @@ body.dark-mode #messageInput:focus {
 .message-card {
     background: var(--card-background);
     backdrop-filter: blur(10px);
-        flex-wrap: nowrap;
-        justify-content: space-between;
     padding: 1.75rem;
     border-radius: 18px;
     border: 1px solid var(--border-color);
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04), 0 8px 32px rgba(0, 0, 0, 0.02);
-    .reply-btn,
     display: flex;
     flex-direction: column;
     transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
                 border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
                 transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    transform-style: preserve-3d;
-    perspective: 1000px;
-    position: absolute;
+    position: relative;
     overflow: hidden;
-    animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards, hang 3s ease-in-out 0.5s infinite;
-    cursor: grab;
-        justify-content: center;
-        flex: 1 1 0;
-    user-select: none;
+    animation: fadeInUp 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    cursor: default;
+    user-select: text;
 }
 
 .message-card.dragging {
@@ -1230,10 +1227,9 @@ body.dark-mode #messageInput:focus {
 }
 
 .message-card:hover {
-    transform: translateY(-10px) scale(1.02);
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.10), 0 4px 12px rgba(0, 0, 0, 0.06);
     border-color: var(--card-accent, var(--accent-color));
-    z-index: 10;
 }
 
 .message-card:hover::before {
@@ -1241,7 +1237,7 @@ body.dark-mode #messageInput:focus {
 }
 
 body.dark-mode .message-card:hover {
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 113, 227, 0.2);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55), 0 3px 12px rgba(0, 113, 227, 0.2);
 }
 
 body.dark-mode .message-card:hover::before {
@@ -1485,6 +1481,7 @@ body.dark-mode .message-card:hover::before {
     display: flex;
     flex-direction: column;
     gap: 0.45rem;
+    flex: 1;
     min-width: 0;
     justify-content: center;
 }
@@ -1507,21 +1504,27 @@ body.dark-mode .message-avatar {
 }
 
 .message-username {
+    display: block;
     font-size: 0.95rem;
     font-weight: 600;
     color: var(--text-color);
+    opacity: 1;
+    visibility: visible;
     line-height: 1.2;
-    white-space: nowrap;
+    white-space: normal;
     overflow: visible;
-    text-overflow: clip;
-    word-break: normal;
-    overflow-wrap: normal;
+    text-overflow: unset;
+    max-width: 100%;
+    word-break: break-word;
+    overflow-wrap: anywhere;
 }
 
 .message-actions {
     display: flex;
     align-items: center;
     gap: 0.45rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     flex-shrink: 0;
     align-self: start;
     margin-top: 0.1rem;
@@ -1563,6 +1566,7 @@ body.dark-mode .message-avatar {
 .category-badge {
     display: inline-flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 0.35rem;
     background: linear-gradient(135deg, var(--background-color), var(--card-background));
     padding: 0.4rem 0.9rem;
@@ -1575,7 +1579,9 @@ body.dark-mode .message-avatar {
     border: 1px solid var(--border-color);
     letter-spacing: 0.3px;
     align-self: flex-start;
-    white-space: nowrap;
+    white-space: normal;
+    max-width: 100%;
+    overflow: visible;
 }
 
 .badge-emoji {
@@ -2220,7 +2226,7 @@ body,
     .message-header {
         margin-bottom: 1rem;
         display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-columns: minmax(0, 1fr);
         align-items: start;
         gap: 0.65rem;
     }
@@ -2229,6 +2235,9 @@ body,
         align-self: start;
         gap: 0.35rem;
         margin-top: 0.05rem;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        max-width: 100%;
     }
 
     .message-time {
@@ -2895,15 +2904,15 @@ body,
 
 .message-card .message-header {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr);
     align-items: start;
-    gap: 0.95rem;
+    gap: 0.6rem;
     margin-bottom: 1rem;
 }
 
 .message-card .message-user-block {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.75rem;
     min-width: 0;
 }
@@ -2913,10 +2922,33 @@ body,
     align-items: center;
     gap: 0.5rem;
     align-self: start;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    max-width: 100%;
 }
 
 .message-card .message-time {
     margin-right: 0.1rem;
+}
+
+.expires-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.18rem 0.5rem;
+    border-radius: 999px;
+    background: var(--background-color);
+    border: 1px dashed var(--border-color);
+    color: var(--subtle-text-color);
+    font-size: 0.76rem;
+    line-height: 1;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+.message-card .message-time,
+.message-card .expires-badge {
+    min-height: 22px;
 }
 
 .secondary-btn {
