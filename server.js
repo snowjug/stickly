@@ -29,15 +29,6 @@ const ADMIN_USERNAME = 'admin';
 const ADMIN_PASSWORD = 'admin123';
 let adminSessions = new Set(); // Store active admin sessions
 
-// Import offensive words list
-const OFFENSIVE_WORDS = require('./offensive-words.json');
-
-function containsOffensiveContent(text) {
-    if (!text) return false;
-    const lowerText = text.toLowerCase();
-    return OFFENSIVE_WORDS.some(word => lowerText.includes(word));
-}
-
 // Configure multer for image uploads
 // For Vercel, we need to handle this differently since serverless functions don't have persistent file storage
 const storage = multer.memoryStorage(); // Use memory storage for serverless compatibility
@@ -153,10 +144,6 @@ app.post('/api/messages', upload.single('image'), (req, res) => {
     // Allow posting if either message, file, or URL is present
     if ((!message || message.trim() === '') && !req.file && (!imageUrl || !imageUrl.trim())) {
         return res.status(400).json({ error: 'Message or image is required' });
-    }
-
-    if (containsOffensiveContent(message)) {
-        return res.status(400).json({ error: 'Message contains offensive content. Please keep the community safe.' });
     }
     
     const validCategories = ['whistleblower', 'controversy', 'thoughts', 'confessions', 'others'];
@@ -276,10 +263,6 @@ app.post('/api/messages/:id/reply', (req, res) => {
 
     if (!text || text.trim() === '') {
         return res.status(400).json({ error: 'Reply text is required' });
-    }
-
-    if (containsOffensiveContent(text)) {
-        return res.status(400).json({ error: 'Reply contains offensive content. Please keep the community safe.' });
     }
 
     if (!message.replies) {
