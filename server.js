@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const multer = require('multer');
 
 // Prometheus metrics
@@ -23,6 +24,8 @@ const httpRequestDuration = new client.Histogram({
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const DATA_DIR = path.join(__dirname, 'data');
+const DATA_FILE = path.join(DATA_DIR, 'stickly-data.json');
 
 // Admin credentials (in production, use environment variables and hashed passwords)
 const ADMIN_USERNAME = 'admin';
@@ -48,10 +51,46 @@ const upload = multer({
     }
 });
 
-// Stores the messages in memory (resets when server restarts !!)
-let messages = [];
-let messageLikes = {}; // Track likes per message: { messageId: count }
-let messageReports = {}; // Track reports per message: { messageId: [reasons] }
+function loadPersistedState() {
+    try {
+        if (!fs.existsSync(DATA_FILE)) {
+            return { messages: [], messageLikes: {}, messageReports: {} };
+        }
+
+        const raw = fs.readFileSync(DATA_FILE, 'utf8');
+        if (!raw.trim()) {
+            return { messages: [], messageLikes: {}, messageReports: {} };
+        }
+
+        const parsed = JSON.parse(raw);
+        return {
+            messages: Array.isArray(parsed.messages) ? parsed.messages : [],
+            messageLikes: parsed.messageLikes && typeof parsed.messageLikes === 'object' ? parsed.messageLikes : {},
+            messageReports: parsed.messageReports && typeof parsed.messageReports === 'object' ? parsed.messageReports : {}
+        };
+    } catch (error) {
+        console.error('Failed to load persisted data, starting with empty state:', error.message);
+        return { messages: [], messageLikes: {}, messageReports: {} };
+    }
+}
+
+function savePersistedState() {
+    try {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+        fs.writeFileSync(
+            DATA_FILE,
+            JSON.stringify({ messages, messageLikes, messageReports }, null, 2),
+            'utf8'
+        );
+    } catch (error) {
+        console.error('Failed to save persisted data:', error.message);
+    }
+}
+
+const persistedState = loadPersistedState();
+let messages = persistedState.messages;
+let messageLikes = persistedState.messageLikes; // Track likes per message: { messageId: count }
+let messageReports = persistedState.messageReports; // Track reports per message: { messageId: [reasons] }
 const AUTO_DELETE_MINUTES = new Set([1, 30, 60, 1440, 10080]);
 
 function purgeExpiredMessages() {
@@ -73,6 +112,10 @@ function purgeExpiredMessages() {
         delete messageLikes[messageId];
         delete messageReports[messageId];
     });
+
+    if (expiredMessageIds.length > 0) {
+        savePersistedState();
+    }
 }
 
 setInterval(purgeExpiredMessages, 30 * 1000);
@@ -184,6 +227,7 @@ app.post('/api/messages', upload.single('image'), (req, res) => {
     };
     
     messages.unshift(newMessage); // Add to beginning of array
+    savePersistedState();
     res.status(201).json(newMessage);
 });
 
@@ -208,6 +252,7 @@ app.delete('/api/messages/:id', (req, res) => {
     // Clean up likes and reports
     delete messageLikes[messageId];
     delete messageReports[messageId];
+    savePersistedState();
     res.status(200).json({ success: true });
 });
 
@@ -228,6 +273,7 @@ app.post('/api/messages/:id/like', (req, res) => {
     
     messageLikes[messageId]++;
     message.likes = messageLikes[messageId];
+    savePersistedState();
     
     res.json({ likes: messageLikes[messageId] });
 });
@@ -245,6 +291,7 @@ app.post('/api/messages/:id/unlike', (req, res) => {
     if (messageLikes[messageId] && messageLikes[messageId] > 0) {
         messageLikes[messageId]--;
         message.likes = messageLikes[messageId];
+        savePersistedState();
     }
     
     res.json({ likes: messageLikes[messageId] || 0 });
@@ -278,6 +325,7 @@ app.post('/api/messages/:id/reply', (req, res) => {
     };
 
     message.replies.push(reply);
+    savePersistedState();
     res.status(201).json(reply);
 });
 
@@ -300,6 +348,8 @@ app.post('/api/messages/:id/report', (req, res) => {
         reason: reason || 'No reason provided',
         timestamp: new Date().toISOString()
     });
+
+    savePersistedState();
     
     res.json({ success: true, reportCount: messageReports[messageId].length });
 });

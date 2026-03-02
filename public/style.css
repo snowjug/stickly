@@ -14,6 +14,9 @@
     --accent-color-hover: #0077ed;
     --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --navbar-bg: rgba(255, 255, 255, 0.8);
+    --glass-surface: linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.62));
+    --glass-border: rgba(255, 255, 255, 0.6);
+    --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
     --modal-bg: rgba(0, 0, 0, 0.4);
     
     /* Category Colors */
@@ -33,6 +36,9 @@ body.dark-mode {
     --accent-color: #0a84ff;
     --accent-color-hover: #409cff;
     --navbar-bg: rgba(28, 28, 30, 0.8);
+    --glass-surface: linear-gradient(135deg, rgba(44, 44, 46, 0.78), rgba(28, 28, 30, 0.62));
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --glass-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
     --modal-bg: rgba(0, 0, 0, 0.7);
 }
 
@@ -122,11 +128,11 @@ body {
 
 /* Navigation Bar */
 .navbar {
-    background: var(--navbar-bg);
-    backdrop-filter: saturate(180%) blur(20px);
-    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    background: var(--glass-surface);
+    backdrop-filter: saturate(180%) blur(24px);
+    -webkit-backdrop-filter: saturate(180%) blur(24px);
     padding: 1rem 2rem;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--glass-border);
     position: sticky;
     top: 0;
     z-index: 100;
@@ -135,6 +141,7 @@ body {
     gap: 1.5rem;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     flex-wrap: nowrap;
+    box-shadow: var(--glass-shadow);
 }
 
 .nav-brand {
@@ -185,7 +192,7 @@ body {
 }
 
 .dark-mode-toggle {
-    background: var(--background-color);
+    background: var(--card-background);
     border: 1px solid var(--border-color);
     border-radius: 20px;
     padding: 0.5rem 1rem;
@@ -208,7 +215,7 @@ body {
 }
 
 .admin-toggle {
-    background: var(--background-color);
+    background: var(--card-background);
     border: 1px solid var(--border-color);
     border-radius: 20px;
     padding: 0.5rem 1rem;
@@ -222,7 +229,7 @@ body {
 }
 
 .profile-toggle {
-    background: var(--background-color);
+    background: var(--card-background);
     border: 1px solid var(--border-color);
     border-radius: 20px;
     padding: 0.5rem 1rem;
@@ -303,7 +310,7 @@ body {
 }
 
 .nav-btn:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: var(--card-background);
 }
 
 body.dark-mode .nav-btn:hover {
