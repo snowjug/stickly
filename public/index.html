@@ -317,12 +317,14 @@
         }
 
         async function checkAdminStatus() {
-            const adminBtn = document.getElementById('adminBtn');
             const loginForm = document.getElementById('adminLoginForm');
             const adminPanel = document.getElementById('adminPanel');
+
+            if (!loginForm || !adminPanel) {
+                return;
+            }
             
             if (!adminSessionId) {
-                adminBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>';
                 loginForm.style.display = 'block';
                 adminPanel.style.display = 'none';
                 return;
@@ -337,22 +339,42 @@
                 const data = await response.json();
                 
                 if (data.isAdmin) {
-                    adminBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>';
-                    adminBtn.style.background = 'linear-gradient(135deg, #0071e3, #0077ed)';
-                    adminBtn.style.color = 'white';
                     loginForm.style.display = 'none';
                     adminPanel.style.display = 'block';
                 } else {
                     adminSessionId = null;
                     localStorage.removeItem('adminSessionId');
-                    adminBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>';
-                    adminBtn.style.background = '';
-                    adminBtn.style.color = '';
                     loginForm.style.display = 'block';
                     adminPanel.style.display = 'none';
                 }
             } catch (error) {
                 console.error('Error checking admin status:', error);
+                loginForm.style.display = 'block';
+                adminPanel.style.display = 'none';
+            }
+        }
+
+        async function isAdminSessionValid() {
+            if (!adminSessionId) {
+                return false;
+            }
+
+            try {
+                const response = await fetch('/api/admin/check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId: adminSessionId })
+                });
+
+                if (!response.ok) {
+                    return false;
+                }
+
+                const data = await response.json();
+                return !!data.isAdmin;
+            } catch (error) {
+                console.error('Error validating admin session:', error);
+                return false;
             }
         }
 
@@ -1720,8 +1742,12 @@
 
         // Delete message
         async function deleteMessage(messageId) {
-            if (!adminSessionId) {
+            const validSession = await isAdminSessionValid();
+            if (!validSession) {
                 alert('Admin login required to delete messages');
+                adminSessionId = null;
+                localStorage.removeItem('adminSessionId');
+                checkAdminStatus();
                 toggleAdminModal();
                 return;
             }
