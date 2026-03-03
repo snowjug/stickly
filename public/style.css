@@ -1831,36 +1831,6 @@ body.dark-mode .message-avatar {
     background: linear-gradient(135deg, #dc3545, #c72f3f);
 }
 
-.cloud-status-badge {
-    position: fixed;
-    left: 1rem;
-    bottom: 1rem;
-    z-index: 1300;
-    font-size: 0.78rem;
-    font-weight: 700;
-    border-radius: 999px;
-    padding: 0.38rem 0.75rem;
-    border: 1px solid var(--border-color);
-    backdrop-filter: blur(8px);
-    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-}
-
-.cloud-status-badge.checking {
-    background: rgba(142, 142, 147, 0.12);
-    color: var(--text-color);
-}
-
-.cloud-status-badge.online {
-    background: rgba(46, 204, 113, 0.14);
-    border-color: rgba(46, 204, 113, 0.35);
-    color: var(--text-color);
-}
-
-.cloud-status-badge.offline {
-    background: rgba(255, 149, 0, 0.14);
-    border-color: rgba(255, 149, 0, 0.34);
-    color: var(--text-color);
-}
 
 .like-btn,
 .reply-btn,
@@ -2190,13 +2160,6 @@ body,
 
     .cursor-dot {
         display: none;
-    }
-
-    .cloud-status-badge {
-        bottom: 0.8rem;
-        left: 0.8rem;
-        font-size: 0.72rem;
-        padding: 0.32rem 0.62rem;
     }
 
     .navbar {

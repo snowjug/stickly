@@ -306,7 +306,6 @@
         let adminSessionId = localStorage.getItem('adminSessionId') || null;
         let autoRefreshIntervalId = null;
         let isLoadingMessages = false;
-        let cloudStatusIntervalId = null;
         const likeRequestsInFlight = new Set();
 
         // Admin functions
@@ -604,39 +603,7 @@
             checkAdminStatus();
             setInterval(updateExpiryBadges, 30000);
             startAutoRefresh();
-            initCloudStatusBadge();
-            checkCloudStatus();
-
-            if (cloudStatusIntervalId) clearInterval(cloudStatusIntervalId);
-            cloudStatusIntervalId = setInterval(checkCloudStatus, 30000);
         };
-
-        function initCloudStatusBadge() {
-            if (document.getElementById('cloudStatusBadge')) return;
-            const badge = document.createElement('div');
-            badge.id = 'cloudStatusBadge';
-            badge.className = 'cloud-status-badge checking';
-            badge.textContent = 'Sync: checking...';
-            document.body.appendChild(badge);
-        }
-
-        async function checkCloudStatus() {
-            const badge = document.getElementById('cloudStatusBadge');
-            if (!badge) return;
-
-            try {
-                const response = await fetch('/api/messages/cloud', { cache: 'no-store' });
-                if (!response.ok) throw new Error('Cloud endpoint unavailable');
-                badge.classList.remove('offline', 'checking');
-                badge.classList.add('online');
-                badge.textContent = 'Sync: cloud connected';
-            } catch (error) {
-                badge.classList.remove('online', 'checking');
-                badge.classList.add('offline');
-                badge.textContent = 'Sync: local fallback';
-                console.warn('Cloud sync status check failed:', error);
-            }
-        }
 
         function getReplyUiStateSnapshot() {
             const expandedReplyIds = Array.from(document.querySelectorAll('.replies-wrapper.expanded'))
