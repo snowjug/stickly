@@ -338,6 +338,7 @@
         let adminSessionId = localStorage.getItem('adminSessionId') || null;
         let autoRefreshIntervalId = null;
         let isLoadingMessages = false;
+        let lastMessagesSignature = '';
         const likeRequestsInFlight = new Set();
         const commentLikeRequestsInFlight = new Set();
         const replySubmitRequestsInFlight = new Set();
@@ -1258,6 +1259,46 @@
             });
         }
 
+        function getReplyTreeStats(replyList) {
+            if (!Array.isArray(replyList) || replyList.length === 0) {
+                return { count: 0, likesSum: 0 };
+            }
+
+            let count = 0;
+            let likesSum = 0;
+            const stack = [...replyList];
+
+            while (stack.length > 0) {
+                const reply = stack.pop();
+                count += 1;
+                likesSum += Number.isFinite(reply?.likes) ? reply.likes : 0;
+                if (Array.isArray(reply?.replies) && reply.replies.length > 0) {
+                    stack.push(...reply.replies);
+                }
+            }
+
+            return { count, likesSum };
+        }
+
+        function buildMessagesSignature(messagesList) {
+            if (!Array.isArray(messagesList) || messagesList.length === 0) {
+                return 'empty';
+            }
+
+            return messagesList.map(msg => {
+                const replyStats = getReplyTreeStats(msg.replies);
+                const imageLength = typeof msg.image === 'string' ? msg.image.length : 0;
+                return [
+                    msg.id || '',
+                    msg.likes || 0,
+                    msg.timestamp || '',
+                    replyStats.count,
+                    replyStats.likesSum,
+                    imageLength
+                ].join(':');
+            }).join('|');
+        }
+
         // Load messages
         async function loadMessages(showSkeleton = true) {
             if (isLoadingMessages) return;
@@ -1283,9 +1324,8 @@
                         .sort((a, b) => (b.likes || 0) - (a.likes || 0));
                 }
 
-                const previousSignature = JSON.stringify(allMessages || []);
-                const nextSignature = JSON.stringify(messages || []);
-                const hasDataChanged = previousSignature !== nextSignature;
+                const nextSignature = buildMessagesSignature(messages);
+                const hasDataChanged = lastMessagesSignature !== nextSignature;
 
                 if (!showSkeleton && !hasDataChanged) {
                     updateMessageCounts();
@@ -1293,6 +1333,7 @@
                 }
 
                 allMessages = messages; // Store for filtering
+                lastMessagesSignature = nextSignature;
                 displayMessages(messages);
                 restoreReplyUiState(replyUiState);
                 updateMessageCounts();
@@ -1398,9 +1439,6 @@
                     postBtn.textContent = '✔ Posted!';
                     postBtn.style.background = 'linear-gradient(135deg, #52c234, #61e049)';
                     
-                    // Wait a moment to show success state
-                    await new Promise(resolve => setTimeout(resolve, 800));
-                    
                     messageInput.value = '';
                     if (imageUpload) {
                         imageUpload.value = '';
@@ -1431,7 +1469,7 @@
                     console.error('Error response:', error);
                     postBtn.textContent = '✗ Failed';
                     postBtn.style.background = 'linear-gradient(135deg, #ff4444, #cc0000)';
-                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    await new Promise(resolve => setTimeout(resolve, 700));
                     
                     if (error.error) {
                         alert(error.error);

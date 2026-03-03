@@ -3260,9 +3260,12 @@ body,
 
 .message-card .message-header {
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: start;
-    gap: 0.55rem;
+    column-gap: 0.42rem;
+    row-gap: 0.2rem;
+    padding-right: 0.2rem;
+    max-width: calc(100% - 0.2rem);
     margin-bottom: 0.85rem;
 }
 
@@ -3323,11 +3326,14 @@ body,
     display: flex;
     align-items: center;
     gap: 0.4rem;
+    justify-self: end;
     align-self: start;
     flex-wrap: nowrap;
     justify-content: flex-end;
     max-width: 100%;
+    margin-top: 0;
     padding-left: 0;
+    padding-right: 0;
 }
 
 .message-card .message-time {
@@ -3366,7 +3372,8 @@ body,
 }
 
 .message-card .delete-btn {
-    margin-left: 0;
+    margin: 0;
+    flex-shrink: 0;
 }
 
 .message-card .message-text {
@@ -3398,6 +3405,13 @@ body,
         transform: none !important;
     }
 
+    .message-card .message-header {
+        grid-template-columns: minmax(0, 1fr) auto;
+        column-gap: 0.3rem;
+        padding-right: 0.12rem;
+        max-width: calc(100% - 0.12rem);
+    }
+
     .message-card .message-meta-row {
         flex-wrap: wrap;
         gap: 0.28rem;
@@ -3412,6 +3426,7 @@ body,
     }
 
     .message-card .message-actions {
+        justify-self: end;
         padding-left: 0;
     }
 

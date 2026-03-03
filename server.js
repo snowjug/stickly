@@ -40,8 +40,11 @@ const supabase = (supabaseUrl && supabaseServiceRoleKey)
     ? createClient(supabaseUrl, supabaseServiceRoleKey)
     : null;
 const supabaseMessagesTable = process.env.SUPABASE_MESSAGES_TABLE || 'stickly_messages';
+const supabaseHydrateCacheMs = Number.parseInt(process.env.SUPABASE_HYDRATE_CACHE_MS || '8000', 10);
 const supabaseMissingConfigMessage =
     'Missing Supabase env vars. Set SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_*SUPABASE_URL) and SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SECRET_KEY).';
+let lastSupabaseHydrationAt = 0;
+let hydrateMessagesPromise = null;
 
 function toSupabaseMessageRow(messagePayload, reports = []) {
     return {
@@ -210,33 +213,56 @@ async function hydrateMessagesFromSupabase() {
         return;
     }
 
-    await purgeExpiredMessagesInSupabase();
+    const cacheMs = Number.isFinite(supabaseHydrateCacheMs) && supabaseHydrateCacheMs >= 0
+        ? supabaseHydrateCacheMs
+        : 0;
+    const now = Date.now();
 
-    const { data, error } = await supabase
-        .from(supabaseMessagesTable)
-        .select('*')
-        .eq('deleted', false)
-        .order('timestamp', { ascending: false })
-        .limit(500);
-
-    if (error) {
-        console.error('Supabase read failed:', error.message);
+    if (lastSupabaseHydrationAt > 0 && (now - lastSupabaseHydrationAt) < cacheMs) {
         return;
     }
 
-    const now = Date.now();
-    const filtered = (data || []).filter(row => {
-        if (!row.expires_at) {
-            return true;
+    if (hydrateMessagesPromise) {
+        await hydrateMessagesPromise;
+        return;
+    }
+
+    hydrateMessagesPromise = (async () => {
+        await purgeExpiredMessagesInSupabase();
+
+        const { data, error } = await supabase
+            .from(supabaseMessagesTable)
+            .select('*')
+            .eq('deleted', false)
+            .order('timestamp', { ascending: false })
+            .limit(500);
+
+        if (error) {
+            console.error('Supabase read failed:', error.message);
+            return;
         }
 
-        const expiryMs = new Date(row.expires_at).getTime();
-        return Number.isFinite(expiryMs) && expiryMs > now;
-    });
+        const now = Date.now();
+        const filtered = (data || []).filter(row => {
+            if (!row.expires_at) {
+                return true;
+            }
 
-    messages = filtered.map(normalizeMessageFromSupabase);
-    rebuildLocalIndexesFromMessages(filtered);
-    savePersistedState();
+            const expiryMs = new Date(row.expires_at).getTime();
+            return Number.isFinite(expiryMs) && expiryMs > now;
+        });
+
+        messages = filtered.map(normalizeMessageFromSupabase);
+        rebuildLocalIndexesFromMessages(filtered);
+        lastSupabaseHydrationAt = Date.now();
+        savePersistedState();
+    })();
+
+    try {
+        await hydrateMessagesPromise;
+    } finally {
+        hydrateMessagesPromise = null;
+    }
 }
 
 // Admin credentials (in production, use environment variables and hashed passwords)
@@ -354,17 +380,41 @@ function loadPersistedState() {
     }
 }
 
-function savePersistedState() {
+let persistWriteTimer = null;
+let persistWriteInProgress = false;
+let persistWriteQueued = false;
+
+async function flushPersistedStateToDisk() {
+    if (persistWriteInProgress) {
+        persistWriteQueued = true;
+        return;
+    }
+
+    persistWriteInProgress = true;
+
     try {
-        fs.mkdirSync(DATA_DIR, { recursive: true });
-        fs.writeFileSync(
-            DATA_FILE,
-            JSON.stringify({ messages, messageLikes, messageReports }, null, 2),
-            'utf8'
-        );
+        do {
+            persistWriteQueued = false;
+            const snapshot = JSON.stringify({ messages, messageLikes, messageReports }, null, 2);
+            await fs.promises.mkdir(DATA_DIR, { recursive: true });
+            await fs.promises.writeFile(DATA_FILE, snapshot, 'utf8');
+        } while (persistWriteQueued);
     } catch (error) {
         console.error('Failed to save persisted data:', error.message);
+    } finally {
+        persistWriteInProgress = false;
     }
+}
+
+function savePersistedState() {
+    if (persistWriteTimer) {
+        clearTimeout(persistWriteTimer);
+    }
+
+    persistWriteTimer = setTimeout(() => {
+        persistWriteTimer = null;
+        flushPersistedStateToDisk();
+    }, 120);
 }
 
 const persistedState = loadPersistedState();
@@ -433,7 +483,15 @@ app.get('/', (req, res) => {
 // Get all messages or filter by category
 app.get('/api/messages', async (req, res) => {
     purgeExpiredMessages();
-    await hydrateMessagesFromSupabase();
+    const shouldWaitForHydration = messages.length === 0;
+    const hydrationTask = hydrateMessagesFromSupabase();
+    if (shouldWaitForHydration) {
+        await hydrationTask;
+    } else {
+        hydrationTask.catch(error => {
+            console.error('Supabase background hydrate failed:', error.message);
+        });
+    }
 
     const { category } = req.query;
     
@@ -654,11 +712,14 @@ app.post('/api/messages', upload.single('mediaFile'), async (req, res) => {
     };
     
     messages.unshift(newMessage); // Add to beginning of array
+    lastSupabaseHydrationAt = Date.now();
     savePersistedState();
 
-    await upsertMessageToSupabase(newMessage);
+    upsertMessageToSupabase(newMessage).catch(error => {
+        console.error('Supabase message sync failed:', error.message);
+    });
 
-    res.status(201).json(newMessage);
+    res.status(201).json({ success: true, id: newMessage.id, timestamp: newMessage.timestamp });
 });
 
 // Delete a message (admin only)
