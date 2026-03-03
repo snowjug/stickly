@@ -308,8 +308,61 @@
         let isLoadingMessages = false;
         const likeRequestsInFlight = new Set();
         const commentLikeRequestsInFlight = new Set();
+        const replySubmitRequestsInFlight = new Set();
+        const nestedReplySubmitRequestsInFlight = new Set();
+        const deleteCommentRequestsInFlight = new Set();
+        const pendingCommentDeletes = new Map();
+        const DELETE_UNDO_GRACE_MS = 5000;
+
+        function getCommentAuthorSessionId() {
+            const storageKey = 'commentAuthorSessionId';
+            const existing = localStorage.getItem(storageKey);
+            if (existing) {
+                return existing;
+            }
+
+            const generated = `${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+            localStorage.setItem(storageKey, generated);
+            return generated;
+        }
+
+        function getCommentDeleteKey(messageId, replyId) {
+            return `${messageId}:${replyId}`;
+        }
+
+        function getPendingDeleteCountdownMs(deadline) {
+            const remaining = deadline - Date.now();
+            return Math.max(0, remaining);
+        }
+
+        function formatPendingDeleteCountdown(deadline) {
+            const seconds = Math.ceil(getPendingDeleteCountdownMs(deadline) / 1000);
+            return `${seconds}s`;
+        }
+
+        function refreshPendingDeleteCountdowns() {
+            document.querySelectorAll('.pending-delete-countdown').forEach(node => {
+                const deadlineRaw = node.dataset.deadline;
+                const deadline = Number.parseInt(deadlineRaw || '0', 10);
+                if (!Number.isFinite(deadline) || deadline <= 0) {
+                    return;
+                }
+
+                node.textContent = formatPendingDeleteCountdown(deadline);
+            });
+        }
+
+        setInterval(refreshPendingDeleteCountdowns, 250);
 
         // Admin functions
+        function openAdminModal() {
+            const modal = document.getElementById('adminModal');
+            if (!modal.classList.contains('show')) {
+                modal.classList.add('show');
+            }
+            checkAdminStatus();
+        }
+
         function toggleAdminModal() {
             const modal = document.getElementById('adminModal');
             modal.classList.toggle('show');
@@ -435,7 +488,7 @@
         }
 
         function showAdminLogin() {
-            toggleAdminModal();
+            openAdminModal();
         }
 
         function toggleProfileModal() {
@@ -1209,11 +1262,29 @@
                 return '';
             }
 
+            const authorSessionId = getCommentAuthorSessionId();
+
             return replyList.map(reply => {
+                const deleteKey = getCommentDeleteKey(messageId, reply.id);
+                const pendingDelete = pendingCommentDeletes.get(deleteKey);
                 const nestedReplies = Array.isArray(reply.replies) ? reply.replies : [];
                 const nestedCount = nestedReplies.length;
                 const commentLiked = isCommentLiked(messageId, reply.id);
                 const commentLikes = Number.isFinite(reply.likes) ? reply.likes : 0;
+                const isOwnedByCurrentSession =
+                    typeof reply.authorSessionId === 'string' &&
+                    reply.authorSessionId === authorSessionId;
+
+                if (pendingDelete) {
+                    return `
+                        <div class="reply-item pending-delete" data-reply-id="${reply.id}" data-depth="${depth}">
+                            <div class="pending-delete-row">
+                                <span class="pending-delete-text">Deleting your comment in <strong class="pending-delete-countdown" data-deadline="${pendingDelete.deadline}">${formatPendingDeleteCountdown(pendingDelete.deadline)}</strong></span>
+                                <button class="comment-undo-btn" onclick="undoDeleteComment(${messageId}, ${reply.id}, event)" title="Undo delete" aria-label="Undo delete">Undo</button>
+                            </div>
+                        </div>
+                    `;
+                }
 
                 return `
                     <div class="reply-item" data-reply-id="${reply.id}" data-depth="${depth}">
@@ -1232,6 +1303,7 @@
                                 <span>↩</span>
                                 <span>${nestedCount}</span>
                             </button>
+                            ${isOwnedByCurrentSession ? `<button class="comment-delete-btn" onclick="deleteComment(${messageId}, ${reply.id}, event)" title="Delete your comment" aria-label="Delete your comment">×</button>` : ''}
                         </div>
                         <div id="comment-reply-box-${messageId}-${reply.id}" class="comment-reply-input-container" style="display: none;">
                             <input type="text" id="comment-reply-input-${messageId}-${reply.id}" class="comment-reply-input" placeholder="Reply to this comment..." autocomplete="off" onkeypress="if(event.key === 'Enter') submitCommentReply(${messageId}, ${reply.id})">
@@ -1567,6 +1639,10 @@
         }
 
         async function submitReply(messageId) {
+            if (replySubmitRequestsInFlight.has(messageId)) {
+                return;
+            }
+
             const input = document.getElementById(`reply-input-${messageId}`);
             if (!input) return;
 
@@ -1576,7 +1652,12 @@
                 return;
             }
 
+            const sendBtn = input.parentElement ? input.parentElement.querySelector('.reply-send-btn') : null;
+
             const profile = getUserProfile();
+            const authorSessionId = getCommentAuthorSessionId();
+            replySubmitRequestsInFlight.add(messageId);
+            if (sendBtn) sendBtn.disabled = true;
 
             try {
                 const response = await fetch(`/api/messages/${messageId}/reply`, {
@@ -1585,7 +1666,8 @@
                     body: JSON.stringify({
                         text,
                         username: profile.username,
-                        avatar: profile.avatar
+                        avatar: profile.avatar,
+                        authorSessionId
                     })
                 });
 
@@ -1617,6 +1699,9 @@
             } catch (error) {
                 console.error('Error posting reply:', error);
                 alert('Error posting reply');
+            } finally {
+                replySubmitRequestsInFlight.delete(messageId);
+                if (sendBtn) sendBtn.disabled = false;
             }
         }
 
@@ -1654,6 +1739,11 @@
         }
 
         async function submitCommentReply(messageId, replyId) {
+            const requestKey = `${messageId}:${replyId}`;
+            if (nestedReplySubmitRequestsInFlight.has(requestKey)) {
+                return;
+            }
+
             const input = document.getElementById(`comment-reply-input-${messageId}-${replyId}`);
             if (!input) return;
 
@@ -1663,7 +1753,12 @@
                 return;
             }
 
+            const sendBtn = input.parentElement ? input.parentElement.querySelector('.comment-reply-send-btn') : null;
+
             const profile = getUserProfile();
+            const authorSessionId = getCommentAuthorSessionId();
+            nestedReplySubmitRequestsInFlight.add(requestKey);
+            if (sendBtn) sendBtn.disabled = true;
 
             try {
                 const response = await fetch(`/api/messages/${messageId}/replies/${replyId}/reply`, {
@@ -1672,7 +1767,8 @@
                     body: JSON.stringify({
                         text,
                         username: profile.username,
-                        avatar: profile.avatar
+                        avatar: profile.avatar,
+                        authorSessionId
                     })
                 });
 
@@ -1699,6 +1795,90 @@
             } catch (error) {
                 console.error('Error posting comment reply:', error);
                 alert('Error posting comment reply');
+            } finally {
+                nestedReplySubmitRequestsInFlight.delete(requestKey);
+                if (sendBtn) sendBtn.disabled = false;
+            }
+        }
+
+        async function deleteComment(messageId, replyId, event) {
+            if (event) event.stopPropagation();
+
+            const requestKey = `${messageId}:${replyId}`;
+            if (deleteCommentRequestsInFlight.has(requestKey)) {
+                return;
+            }
+
+            if (!confirm('Delete your comment?')) {
+                return;
+            }
+
+            const deleteKey = getCommentDeleteKey(messageId, replyId);
+            if (pendingCommentDeletes.has(deleteKey)) {
+                return;
+            }
+
+            const deadline = Date.now() + DELETE_UNDO_GRACE_MS;
+            const timeoutId = setTimeout(() => {
+                finalizeCommentDelete(messageId, replyId);
+            }, DELETE_UNDO_GRACE_MS);
+
+            pendingCommentDeletes.set(deleteKey, { timeoutId, deadline });
+            displayMessages(allMessages);
+            return;
+        }
+
+        function undoDeleteComment(messageId, replyId, event) {
+            if (event) event.stopPropagation();
+
+            const deleteKey = getCommentDeleteKey(messageId, replyId);
+            const pendingDelete = pendingCommentDeletes.get(deleteKey);
+            if (!pendingDelete) {
+                return;
+            }
+
+            clearTimeout(pendingDelete.timeoutId);
+            pendingCommentDeletes.delete(deleteKey);
+            displayMessages(allMessages);
+            showToast('Delete cancelled', 'success');
+        }
+
+        async function finalizeCommentDelete(messageId, replyId) {
+            const deleteKey = getCommentDeleteKey(messageId, replyId);
+            const pendingDelete = pendingCommentDeletes.get(deleteKey);
+            if (!pendingDelete) {
+                return;
+            }
+
+            pendingCommentDeletes.delete(deleteKey);
+
+            const requestKey = `${messageId}:${replyId}`;
+            deleteCommentRequestsInFlight.add(requestKey);
+
+            try {
+                const response = await fetch(`/api/messages/${messageId}/replies/${replyId}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        authorSessionId: getCommentAuthorSessionId(),
+                        sessionId: adminSessionId || null
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    showToast(error.error || 'Failed to delete comment', 'error');
+                    loadMessages(false);
+                    return;
+                }
+
+                loadMessages(false);
+                showToast('Comment deleted', 'success');
+            } catch (error) {
+                console.error('Error deleting comment:', error);
+                showToast('Error deleting comment', 'error');
+            } finally {
+                deleteCommentRequestsInFlight.delete(requestKey);
             }
         }
 
@@ -1742,13 +1922,10 @@
 
         // Delete message
         async function deleteMessage(messageId) {
-            const validSession = await isAdminSessionValid();
-            if (!validSession) {
+            if (!adminSessionId) {
                 alert('Admin login required to delete messages');
-                adminSessionId = null;
-                localStorage.removeItem('adminSessionId');
                 checkAdminStatus();
-                toggleAdminModal();
+                openAdminModal();
                 return;
             }
             
@@ -1768,7 +1945,7 @@
                     adminSessionId = null;
                     localStorage.removeItem('adminSessionId');
                     checkAdminStatus();
-                    toggleAdminModal();
+                    openAdminModal();
                 } else {
                     alert('Error deleting message. Please try again.');
                 }

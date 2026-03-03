@@ -2106,6 +2106,72 @@ body,
     transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease, background 0.2s ease;
 }
 
+.comment-delete-btn {
+    border: 1px solid var(--border-color);
+    background: var(--card-background);
+    color: var(--subtle-text-color);
+    border-radius: 999px;
+    width: 26px;
+    min-width: 26px;
+    height: 26px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+
+.comment-delete-btn:hover {
+    border-color: #ff4d6d;
+    color: #ff4d6d;
+    transform: translateY(-1px);
+}
+
+.comment-delete-btn:active {
+    transform: scale(0.96);
+}
+
+.reply-item.pending-delete {
+    border-style: dashed;
+    background: linear-gradient(135deg, rgba(255, 149, 0, 0.08), rgba(255, 59, 48, 0.06));
+}
+
+.pending-delete-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+}
+
+.pending-delete-text {
+    font-size: 0.84rem;
+    color: var(--subtle-text-color);
+}
+
+.comment-undo-btn {
+    border: 1px solid var(--border-color);
+    background: var(--card-background);
+    color: var(--text-color);
+    border-radius: 999px;
+    padding: 0.22rem 0.6rem;
+    min-height: 28px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.comment-undo-btn:hover {
+    transform: translateY(-1px);
+    border-color: var(--accent-color);
+}
+
+.comment-undo-btn:active {
+    transform: scale(0.96);
+}
+
 .comment-like-btn:hover,
 .comment-reply-btn:hover {
     transform: translateY(-1px);
@@ -2192,6 +2258,12 @@ body,
 
 .comment-reply-send-btn:hover {
     filter: brightness(1.06);
+}
+
+.reply-send-btn:disabled,
+.comment-reply-send-btn:disabled {
+    opacity: 0.6;
+    pointer-events: none;
 }
 
 .reply-input-container {

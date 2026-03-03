@@ -129,6 +129,7 @@ function normalizeReplyTree(replies) {
         text: typeof reply?.text === 'string' ? reply.text : '',
         username: reply?.username || 'Anonymous',
         avatar: reply?.avatar || '👤',
+        authorSessionId: typeof reply?.authorSessionId === 'string' ? reply.authorSessionId : null,
         timestamp: reply?.timestamp || new Date().toISOString(),
         likes: Number.isFinite(reply?.likes) ? reply.likes : 0,
         replies: normalizeReplyTree(reply?.replies)
@@ -152,6 +153,26 @@ function findReplyById(replyList, replyId) {
     }
 
     return null;
+}
+
+function removeReplyById(replyList, replyId) {
+    if (!Array.isArray(replyList)) {
+        return false;
+    }
+
+    const directIndex = replyList.findIndex(reply => reply.id === replyId);
+    if (directIndex !== -1) {
+        replyList.splice(directIndex, 1);
+        return true;
+    }
+
+    for (const reply of replyList) {
+        if (removeReplyById(reply.replies, replyId)) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 function rebuildLocalIndexesFromMessages(rows) {
@@ -649,7 +670,7 @@ app.post('/api/messages/:id/reply', async (req, res) => {
     await hydrateMessagesFromSupabase();
 
     const messageId = parseInt(req.params.id);
-    const { text, username, avatar } = req.body;
+    const { text, username, avatar, authorSessionId } = req.body;
     const message = messages.find(msg => msg.id === messageId);
 
     if (!message) {
@@ -669,6 +690,7 @@ app.post('/api/messages/:id/reply', async (req, res) => {
         text: text.trim(),
         username: username || 'Anonymous',
         avatar: avatar || '👤',
+        authorSessionId: typeof authorSessionId === 'string' ? authorSessionId : null,
         timestamp: new Date().toISOString(),
         likes: 0,
         replies: []
@@ -752,7 +774,7 @@ app.post('/api/messages/:id/replies/:replyId/reply', async (req, res) => {
 
     const messageId = parseInt(req.params.id);
     const replyId = parseInt(req.params.replyId);
-    const { text, username, avatar } = req.body;
+    const { text, username, avatar, authorSessionId } = req.body;
     const message = messages.find(msg => msg.id === messageId);
 
     if (!message) {
@@ -777,6 +799,7 @@ app.post('/api/messages/:id/replies/:replyId/reply', async (req, res) => {
         text: text.trim(),
         username: username || 'Anonymous',
         avatar: avatar || '👤',
+        authorSessionId: typeof authorSessionId === 'string' ? authorSessionId : null,
         timestamp: new Date().toISOString(),
         likes: 0,
         replies: []
@@ -788,6 +811,44 @@ app.post('/api/messages/:id/replies/:replyId/reply', async (req, res) => {
     await syncMessageStateToSupabase(messageId);
 
     res.status(201).json(nestedReply);
+});
+
+app.delete('/api/messages/:id/replies/:replyId', async (req, res) => {
+    purgeExpiredMessages();
+    await hydrateMessagesFromSupabase();
+
+    const messageId = Number.parseInt(req.params.id, 10);
+    const replyId = Number.parseInt(req.params.replyId, 10);
+    const { authorSessionId, sessionId } = req.body || {};
+    const message = messages.find(msg => msg.id === messageId);
+
+    if (!message) {
+        return res.status(404).json({ error: 'Message not found' });
+    }
+
+    const targetReply = findReplyById(message.replies, replyId);
+    if (!targetReply) {
+        return res.status(404).json({ error: 'Comment not found' });
+    }
+
+    const isAdmin = typeof sessionId === 'string' && adminSessions.has(sessionId);
+    const ownsReply = typeof authorSessionId === 'string' &&
+        typeof targetReply.authorSessionId === 'string' &&
+        targetReply.authorSessionId === authorSessionId;
+
+    if (!isAdmin && !ownsReply) {
+        return res.status(403).json({ error: 'You can only delete your own comment.' });
+    }
+
+    const removed = removeReplyById(message.replies, replyId);
+    if (!removed) {
+        return res.status(404).json({ error: 'Comment not found' });
+    }
+
+    savePersistedState();
+    await syncMessageStateToSupabase(messageId);
+
+    return res.json({ success: true });
 });
 
 // Report a message

@@ -1,6 +1,41 @@
 {
   "messages": [
     {
+      "id": 1772552990421,
+      "text": "Ownership test post 2",
+      "category": "thoughts",
+      "timestamp": "2026-03-03T15:49:50.421Z",
+      "image": null,
+      "likes": 0,
+      "username": "OwnerTest",
+      "avatar": "??",
+      "expiresAt": "2026-03-04T15:49:50.421Z",
+      "replies": []
+    },
+    {
+      "id": 1772552948394,
+      "text": "Ownership test post",
+      "category": "thoughts",
+      "timestamp": "2026-03-03T15:49:08.394Z",
+      "image": null,
+      "likes": 0,
+      "username": "OwnerTest",
+      "avatar": "??",
+      "expiresAt": "2026-03-04T15:49:08.394Z",
+      "replies": [
+        {
+          "id": 1772552948428,
+          "text": "Owner comment",
+          "username": "Owner",
+          "avatar": "??",
+          "authorSessionId": null,
+          "timestamp": "2026-03-03T15:49:08.428Z",
+          "likes": 0,
+          "replies": []
+        }
+      ]
+    },
+    {
       "id": 1772552169568,
       "text": "Smoke test post",
       "category": "thoughts",
@@ -16,6 +51,7 @@
           "text": "First comment",
           "username": "Commenter",
           "avatar": "??",
+          "authorSessionId": null,
           "timestamp": "2026-03-03T15:36:09.595Z",
           "likes": 2,
           "replies": [
@@ -24,6 +60,7 @@
               "text": "Replying to comment",
               "username": "Nested",
               "avatar": "??",
+              "authorSessionId": null,
               "timestamp": "2026-03-03T15:36:09.601Z",
               "likes": 1,
               "replies": []
