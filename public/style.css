@@ -1831,6 +1831,37 @@ body.dark-mode .message-avatar {
     background: linear-gradient(135deg, #dc3545, #c72f3f);
 }
 
+.cloud-status-badge {
+    position: fixed;
+    left: 1rem;
+    bottom: 1rem;
+    z-index: 1300;
+    font-size: 0.78rem;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 0.38rem 0.75rem;
+    border: 1px solid var(--border-color);
+    backdrop-filter: blur(8px);
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.cloud-status-badge.checking {
+    background: rgba(142, 142, 147, 0.12);
+    color: var(--text-color);
+}
+
+.cloud-status-badge.online {
+    background: rgba(46, 204, 113, 0.14);
+    border-color: rgba(46, 204, 113, 0.35);
+    color: var(--text-color);
+}
+
+.cloud-status-badge.offline {
+    background: rgba(255, 149, 0, 0.14);
+    border-color: rgba(255, 149, 0, 0.34);
+    color: var(--text-color);
+}
+
 .like-btn,
 .reply-btn,
 .share-btn,
@@ -1927,6 +1958,11 @@ body.dark-mode .message-avatar {
     animation: heartBeat 0.3s ease;
 }
 
+.like-btn.liking {
+    opacity: 0.82;
+    pointer-events: none;
+}
+
 @keyframes heartBeat {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.3); }
@@ -1958,7 +1994,10 @@ body,
 .replies-wrapper {
     display: none;
     margin-top: 0.95rem;
-    padding-left: 1.1rem;
+    background: linear-gradient(180deg, rgba(0, 113, 227, 0.04), rgba(0, 113, 227, 0.01));
+    border: 1px solid rgba(0, 113, 227, 0.12);
+    border-radius: 16px;
+    padding: 0.75rem 0.75rem 0.85rem 1.1rem;
     border-left: none;
     opacity: 0;
     transform: translateY(-6px);
@@ -1989,9 +2028,43 @@ body,
     margin-bottom: 0.8rem;
 }
 
+.replies-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.55rem;
+}
+
+.replies-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--subtle-text-color);
+}
+
+.replies-count {
+    font-size: 0.76rem;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 0.2rem 0.45rem;
+    background: rgba(0, 113, 227, 0.12);
+    color: var(--accent-color);
+}
+
+.replies-empty {
+    border: 1px dashed var(--border-color);
+    background: var(--card-background);
+    color: var(--subtle-text-color);
+    border-radius: 12px;
+    padding: 0.75rem;
+    text-align: center;
+    font-size: 0.86rem;
+}
+
 .reply-item {
     position: relative;
-    background: var(--background-color);
+    background: var(--card-background);
     border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 0.72rem 0.84rem;
@@ -2036,6 +2109,7 @@ body,
     line-height: 1.4;
     color: var(--text-color);
     word-wrap: break-word;
+    font-size: 0.92rem;
 }
 
 .reply-input-container {
@@ -2116,6 +2190,13 @@ body,
 
     .cursor-dot {
         display: none;
+    }
+
+    .cloud-status-badge {
+        bottom: 0.8rem;
+        left: 0.8rem;
+        font-size: 0.72rem;
+        padding: 0.32rem 0.62rem;
     }
 
     .navbar {

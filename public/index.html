@@ -306,6 +306,8 @@
         let adminSessionId = localStorage.getItem('adminSessionId') || null;
         let autoRefreshIntervalId = null;
         let isLoadingMessages = false;
+        let cloudStatusIntervalId = null;
+        const likeRequestsInFlight = new Set();
 
         // Admin functions
         function toggleAdminModal() {
@@ -602,7 +604,39 @@
             checkAdminStatus();
             setInterval(updateExpiryBadges, 30000);
             startAutoRefresh();
+            initCloudStatusBadge();
+            checkCloudStatus();
+
+            if (cloudStatusIntervalId) clearInterval(cloudStatusIntervalId);
+            cloudStatusIntervalId = setInterval(checkCloudStatus, 30000);
         };
+
+        function initCloudStatusBadge() {
+            if (document.getElementById('cloudStatusBadge')) return;
+            const badge = document.createElement('div');
+            badge.id = 'cloudStatusBadge';
+            badge.className = 'cloud-status-badge checking';
+            badge.textContent = 'Sync: checking...';
+            document.body.appendChild(badge);
+        }
+
+        async function checkCloudStatus() {
+            const badge = document.getElementById('cloudStatusBadge');
+            if (!badge) return;
+
+            try {
+                const response = await fetch('/api/messages/cloud', { cache: 'no-store' });
+                if (!response.ok) throw new Error('Cloud endpoint unavailable');
+                badge.classList.remove('offline', 'checking');
+                badge.classList.add('online');
+                badge.textContent = 'Sync: cloud connected';
+            } catch (error) {
+                badge.classList.remove('online', 'checking');
+                badge.classList.add('offline');
+                badge.textContent = 'Sync: local fallback';
+                console.warn('Cloud sync status check failed:', error);
+            }
+        }
 
         function startAutoRefresh() {
             if (autoRefreshIntervalId) {
@@ -1145,9 +1179,15 @@
                     </div>
                 `).join('');
 
+                const hasReplies = (msg.replies || []).length > 0;
+
                 const inlineRepliesHtml = `
                     <div id="replies-${msg.id}" class="replies-wrapper">
-                        <div class="replies-list">${repliesList}</div>
+                        <div class="replies-title-row">
+                            <span class="replies-title">Replies</span>
+                            <span class="replies-count">${repliesCount}</span>
+                        </div>
+                        <div class="replies-list">${hasReplies ? repliesList : '<div class="replies-empty">No replies yet. Start the conversation.</div>'}</div>
                         <div class="reply-input-container">
                             <input type="text" id="reply-input-${msg.id}" class="reply-input" placeholder="Write a reply..." autocomplete="off" onkeypress="if(event.key === 'Enter') submitReply(${msg.id})">
                             <button class="reply-send-btn" onclick="submitReply(${msg.id})" title="Send reply">
@@ -1606,7 +1646,41 @@
 
         async function toggleLike(messageId, event) {
             event.stopPropagation();
+
+            if (likeRequestsInFlight.has(messageId)) {
+                return;
+            }
+
+            const likeBtn = event.target.closest('.like-btn');
+            if (!likeBtn) {
+                return;
+            }
+
             const isLiked = likedMessages.includes(messageId);
+            const nextLikedState = !isLiked;
+            const countSpan = likeBtn.querySelector('.like-count');
+            const heartSpan = likeBtn.querySelector('.heart-icon');
+            const currentCount = Number.parseInt(countSpan?.textContent || '0', 10) || 0;
+            const optimisticCount = Math.max(0, currentCount + (nextLikedState ? 1 : -1));
+
+            likeRequestsInFlight.add(messageId);
+            likeBtn.classList.add('liking');
+
+            if (nextLikedState) {
+                likedMessages.push(messageId);
+            } else {
+                likedMessages = likedMessages.filter(id => id !== messageId);
+            }
+            localStorage.setItem('likedMessages', JSON.stringify(likedMessages));
+
+            likeBtn.classList.toggle('liked', nextLikedState);
+            if (countSpan) countSpan.textContent = optimisticCount;
+            if (heartSpan) heartSpan.textContent = getLikeHeartIcon(nextLikedState);
+
+            const targetMessage = allMessages.find(m => m.id === messageId);
+            if (targetMessage) {
+                targetMessage.likes = optimisticCount;
+            }
             
             try {
                 const endpoint = isLiked ? 'unlike' : 'like';
@@ -1616,31 +1690,35 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    
-                    // Update localStorage
-                    if (isLiked) {
-                        likedMessages = likedMessages.filter(id => id !== messageId);
-                    } else {
-                        likedMessages.push(messageId);
-                    }
-                    localStorage.setItem('likedMessages', JSON.stringify(likedMessages));
-                    
-                    // Update UI
-                    const likeBtn = event.target.closest('.like-btn');
-                    const countSpan = likeBtn.querySelector('.like-count');
-                    const heartSpan = likeBtn.querySelector('.heart-icon');
-                    countSpan.textContent = data.likes;
-                    likeBtn.classList.toggle('liked', !isLiked);
+                    if (countSpan) countSpan.textContent = data.likes;
+                    if (targetMessage) targetMessage.likes = data.likes;
                     if (heartSpan) {
-                        heartSpan.textContent = getLikeHeartIcon(!isLiked);
+                        heartSpan.textContent = getLikeHeartIcon(nextLikedState);
                     }
                     
                     // Animate
                     likeBtn.style.transform = 'scale(1.2)';
                     setTimeout(() => likeBtn.style.transform = '', 200);
+                } else {
+                    throw new Error('Like request failed');
                 }
             } catch (error) {
                 console.error('Error toggling like:', error);
+                if (isLiked) {
+                    likedMessages.push(messageId);
+                } else {
+                    likedMessages = likedMessages.filter(id => id !== messageId);
+                }
+                localStorage.setItem('likedMessages', JSON.stringify(likedMessages));
+
+                likeBtn.classList.toggle('liked', isLiked);
+                if (countSpan) countSpan.textContent = currentCount;
+                if (heartSpan) heartSpan.textContent = getLikeHeartIcon(isLiked);
+                if (targetMessage) targetMessage.likes = currentCount;
+                showToast('Failed to update like. Please try again.', 'error');
+            } finally {
+                likeRequestsInFlight.delete(messageId);
+                likeBtn.classList.remove('liking');
             }
         }
 
