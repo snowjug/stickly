@@ -590,7 +590,10 @@ app.delete('/api/messages/:id', async (req, res) => {
     purgeExpiredMessages();
     await hydrateMessagesFromSupabase();
 
-    const { sessionId } = req.body;
+    const sessionId =
+        req.body?.sessionId ||
+        req.get('x-admin-session-id') ||
+        req.query?.sessionId;
     
     // Check if user is admin
     if (!adminSessions.has(sessionId)) {
@@ -819,7 +822,11 @@ app.delete('/api/messages/:id/replies/:replyId', async (req, res) => {
 
     const messageId = Number.parseInt(req.params.id, 10);
     const replyId = Number.parseInt(req.params.replyId, 10);
-    const { authorSessionId, sessionId } = req.body || {};
+    const { authorSessionId } = req.body || {};
+    const sessionId =
+        req.body?.sessionId ||
+        req.get('x-admin-session-id') ||
+        req.query?.sessionId;
     const message = messages.find(msg => msg.id === messageId);
 
     if (!message) {

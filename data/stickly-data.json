@@ -1,6 +1,18 @@
 {
   "messages": [
     {
+      "id": 1772553505444,
+      "text": "Admin delete transport test",
+      "category": "thoughts",
+      "timestamp": "2026-03-03T15:58:25.444Z",
+      "image": null,
+      "likes": 0,
+      "username": "Anonymous",
+      "avatar": "👤",
+      "expiresAt": "2026-03-04T15:58:25.444Z",
+      "replies": []
+    },
+    {
       "id": 1772552990421,
       "text": "Ownership test post 2",
       "category": "thoughts",

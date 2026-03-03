@@ -408,15 +408,18 @@
         }
 
         async function isAdminSessionValid() {
-            if (!adminSessionId) {
+            const currentSessionId = adminSessionId || localStorage.getItem('adminSessionId');
+            if (!currentSessionId) {
                 return false;
             }
+
+            adminSessionId = currentSessionId;
 
             try {
                 const response = await fetch('/api/admin/check', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sessionId: adminSessionId })
+                    body: JSON.stringify({ sessionId: currentSessionId })
                 });
 
                 if (!response.ok) {
@@ -1858,10 +1861,13 @@
             try {
                 const response = await fetch(`/api/messages/${messageId}/replies/${replyId}`, {
                     method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-session-id': adminSessionId || localStorage.getItem('adminSessionId') || ''
+                    },
                     body: JSON.stringify({
                         authorSessionId: getCommentAuthorSessionId(),
-                        sessionId: adminSessionId || null
+                        sessionId: adminSessionId || localStorage.getItem('adminSessionId') || null
                     })
                 });
 
@@ -1922,6 +1928,8 @@
 
         // Delete message
         async function deleteMessage(messageId) {
+            adminSessionId = adminSessionId || localStorage.getItem('adminSessionId');
+
             if (!adminSessionId) {
                 alert('Admin login required to delete messages');
                 checkAdminStatus();
@@ -1932,9 +1940,13 @@
             if (!confirm('Delete this message?')) return;
             
             try {
-                const response = await fetch(`/api/messages/${messageId}`, {
+                const encodedSessionId = encodeURIComponent(adminSessionId);
+                const response = await fetch(`/api/messages/${messageId}?sessionId=${encodedSessionId}`, {
                     method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-session-id': adminSessionId
+                    },
                     body: JSON.stringify({ sessionId: adminSessionId })
                 });
 
