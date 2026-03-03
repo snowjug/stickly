@@ -304,6 +304,8 @@
         let currentSection = 'all';
         let selectedCategory = 'thoughts';
         let adminSessionId = localStorage.getItem('adminSessionId') || null;
+        let autoRefreshIntervalId = null;
+        let isLoadingMessages = false;
 
         // Admin functions
         function toggleAdminModal() {
@@ -599,7 +601,31 @@
             initImageUpload();
             checkAdminStatus();
             setInterval(updateExpiryBadges, 30000);
+            startAutoRefresh();
         };
+
+        function startAutoRefresh() {
+            if (autoRefreshIntervalId) {
+                clearInterval(autoRefreshIntervalId);
+            }
+
+            autoRefreshIntervalId = setInterval(() => {
+                if (document.hidden) return;
+
+                const postModalOpen = document.getElementById('postModal')?.classList.contains('show');
+                const reportModalOpen = document.getElementById('reportModal')?.classList.contains('show');
+                const adminModalOpen = document.getElementById('adminModal')?.classList.contains('show');
+                if (postModalOpen || reportModalOpen || adminModalOpen) return;
+
+                loadMessages(false);
+            }, 8000);
+
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) {
+                    loadMessages(false);
+                }
+            });
+        }
 
         function formatExpiresIn(expiresAt) {
             if (!expiresAt) return '';
@@ -895,9 +921,15 @@
         }
 
         // Load messages
-        async function loadMessages() {
+        async function loadMessages(showSkeleton = true) {
+            if (isLoadingMessages) return;
+
             try {
-                showLoadingSkeletons();
+                isLoadingMessages = true;
+
+                if (showSkeleton) {
+                    showLoadingSkeletons();
+                }
 
                 const url = (currentSection === 'all' || currentSection === 'trending')
                     ? '/api/messages'
@@ -917,6 +949,8 @@
                 updateMessageCounts();
             } catch (error) {
                 console.error('Error loading messages:', error);
+            } finally {
+                isLoadingMessages = false;
             }
         }
 
