@@ -638,6 +638,75 @@
             }
         }
 
+        function getReplyUiStateSnapshot() {
+            const expandedReplyIds = Array.from(document.querySelectorAll('.replies-wrapper.expanded'))
+                .map(wrapper => wrapper.id.replace('replies-', ''));
+
+            const replyDrafts = {};
+            document.querySelectorAll('.reply-input').forEach(input => {
+                const messageId = input.id.replace('reply-input-', '');
+                if (messageId && input.value) {
+                    replyDrafts[messageId] = input.value;
+                }
+            });
+
+            const focusedElement = document.activeElement;
+            let focusedReply = null;
+            if (focusedElement && focusedElement.classList && focusedElement.classList.contains('reply-input')) {
+                focusedReply = {
+                    messageId: focusedElement.id.replace('reply-input-', ''),
+                    selectionStart: focusedElement.selectionStart,
+                    selectionEnd: focusedElement.selectionEnd
+                };
+            }
+
+            return {
+                expandedReplyIds,
+                replyDrafts,
+                focusedReply
+            };
+        }
+
+        function restoreReplyUiState(snapshot) {
+            if (!snapshot) return;
+
+            (snapshot.expandedReplyIds || []).forEach(messageId => {
+                const wrapper = document.getElementById(`replies-${messageId}`);
+                const card = wrapper ? wrapper.closest('.message-card') : null;
+                if (!wrapper) return;
+
+                wrapper.style.display = 'block';
+                wrapper.classList.add('expanded');
+                if (card) card.classList.add('expanded-card');
+            });
+
+            Object.entries(snapshot.replyDrafts || {}).forEach(([messageId, draft]) => {
+                const input = document.getElementById(`reply-input-${messageId}`);
+                if (input) {
+                    input.value = draft;
+                }
+            });
+
+            if (snapshot.focusedReply && snapshot.focusedReply.messageId) {
+                const focusedInput = document.getElementById(`reply-input-${snapshot.focusedReply.messageId}`);
+                if (focusedInput) {
+                    focusedInput.focus();
+                    if (Number.isInteger(snapshot.focusedReply.selectionStart) && Number.isInteger(snapshot.focusedReply.selectionEnd)) {
+                        focusedInput.setSelectionRange(snapshot.focusedReply.selectionStart, snapshot.focusedReply.selectionEnd);
+                    }
+                }
+            }
+        }
+
+        function isReplyInteractionActive() {
+            const activeElement = document.activeElement;
+            if (activeElement && activeElement.classList && activeElement.classList.contains('reply-input')) {
+                return true;
+            }
+
+            return Array.from(document.querySelectorAll('.reply-input')).some(input => input.value.trim().length > 0);
+        }
+
         function startAutoRefresh() {
             if (autoRefreshIntervalId) {
                 clearInterval(autoRefreshIntervalId);
@@ -649,7 +718,7 @@
                 const postModalOpen = document.getElementById('postModal')?.classList.contains('show');
                 const reportModalOpen = document.getElementById('reportModal')?.classList.contains('show');
                 const adminModalOpen = document.getElementById('adminModal')?.classList.contains('show');
-                if (postModalOpen || reportModalOpen || adminModalOpen) return;
+                if (postModalOpen || reportModalOpen || adminModalOpen || isReplyInteractionActive()) return;
 
                 loadMessages(false);
             }, 8000);
@@ -960,6 +1029,7 @@
 
             try {
                 isLoadingMessages = true;
+                const replyUiState = getReplyUiStateSnapshot();
 
                 if (showSkeleton) {
                     showLoadingSkeletons();
@@ -980,6 +1050,7 @@
 
                 allMessages = messages; // Store for filtering
                 displayMessages(messages);
+                restoreReplyUiState(replyUiState);
                 updateMessageCounts();
             } catch (error) {
                 console.error('Error loading messages:', error);
