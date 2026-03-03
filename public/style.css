@@ -3400,6 +3400,15 @@ body,
 
     .message-card .message-meta-row {
         flex-wrap: wrap;
+        gap: 0.28rem;
+        padding-right: 0.2rem;
+        max-width: calc(100% - 0.2rem);
+    }
+
+    .message-card[data-category="whistleblower"] .message-meta-row,
+    .message-card[data-category="controversy"] .message-meta-row {
+        padding-right: 0.2rem;
+        max-width: calc(100% - 0.2rem);
     }
 
     .message-card .message-actions {
