@@ -28,12 +28,19 @@ const PORT = process.env.PORT || 3000;
 const DATA_DIR = path.join(__dirname, 'data');
 const DATA_FILE = path.join(DATA_DIR, 'stickly-data.json');
 
-const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseUrl =
+    process.env.SUPABASE_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env['NEXT_PUBLIC_*SUPABASE_URL'];
+const supabaseServiceRoleKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SECRET_KEY;
 const supabase = (supabaseUrl && supabaseServiceRoleKey)
     ? createClient(supabaseUrl, supabaseServiceRoleKey)
     : null;
 const supabaseMessagesTable = process.env.SUPABASE_MESSAGES_TABLE || 'stickly_messages';
+const supabaseMissingConfigMessage =
+    'Missing Supabase env vars. Set SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_*SUPABASE_URL) and SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SECRET_KEY).';
 
 function toSupabaseMessageRow(messagePayload, reports = []) {
     return {
@@ -314,7 +321,7 @@ app.get('/api/messages/cloud', async (req, res) => {
     if (!supabase) {
         return res.status(500).json({
             ok: false,
-            error: 'Missing SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) or SUPABASE_SERVICE_ROLE_KEY env vars.'
+            error: supabaseMissingConfigMessage
         });
     }
 
@@ -358,7 +365,7 @@ app.get('/api/supabase-test', async (req, res) => {
     if (!supabase) {
         return res.status(500).json({
             ok: false,
-            error: 'Missing SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) or SUPABASE_SERVICE_ROLE_KEY env vars.'
+            error: supabaseMissingConfigMessage
         });
     }
 
@@ -375,7 +382,7 @@ app.post('/api/supabase-test', async (req, res) => {
     if (!supabase) {
         return res.status(500).json({
             ok: false,
-            error: 'Missing SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) or SUPABASE_SERVICE_ROLE_KEY env vars.'
+            error: supabaseMissingConfigMessage
         });
     }
 
@@ -433,7 +440,7 @@ app.post('/api/admin/migrate-local-to-cloud', async (req, res) => {
     if (!supabase) {
         return res.status(500).json({
             ok: false,
-            error: 'Missing SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) or SUPABASE_SERVICE_ROLE_KEY env vars.'
+            error: supabaseMissingConfigMessage
         });
     }
 

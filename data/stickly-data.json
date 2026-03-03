@@ -1,5 +1,18 @@
 {
-  "messages": [],
+  "messages": [
+    {
+      "id": 1772550102966,
+      "text": "compat smoke",
+      "category": "thoughts",
+      "timestamp": "2026-03-03T15:01:42.966Z",
+      "image": null,
+      "likes": 0,
+      "username": "SmokeBot",
+      "avatar": "👤",
+      "expiresAt": "2026-03-03T15:02:42.966Z",
+      "replies": []
+    }
+  ],
   "messageLikes": {},
   "messageReports": {}
 }
