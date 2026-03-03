@@ -1014,6 +1014,31 @@ body.dark-mode #messageInput:focus {
     transform: scale(1.01);
 }
 
+.message-media-wrap {
+    width: 100%;
+    margin-top: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--card-background);
+}
+
+.message-video {
+    width: 100%;
+    max-height: 320px;
+    object-fit: cover;
+    display: block;
+    background: #000;
+}
+
+.message-video-embed {
+    width: 100%;
+    height: 300px;
+    border: 0;
+    display: block;
+    background: #000;
+}
+
 .form-footer {
     display: flex;
     justify-content: space-between;
@@ -1641,6 +1666,23 @@ body.dark-mode .message-avatar {
     border-color: transparent;
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(0, 113, 227, 0.3);
+}
+
+.media-type-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.18rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 113, 227, 0.22);
+    background: rgba(0, 113, 227, 0.08);
+    color: var(--accent-color);
+    font-size: 0.73rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .message-time {

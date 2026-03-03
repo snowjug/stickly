@@ -171,6 +171,38 @@
                     />
                     <div id="imagePreview" class="image-preview"></div>
                 </div>
+
+                <div class="image-upload-section media-video-section" style="margin-top: 0.85rem;">
+                    <label for="videoUpload" class="image-upload-label">
+                        <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                        </svg>
+                        <span class="upload-text">Attach Video / YouTube</span>
+                    </label>
+                    <input
+                        type="file"
+                        id="videoUpload"
+                        accept="video/mp4,video/webm,video/ogg,video/quicktime"
+                        style="display: none;"
+                    />
+                    <div style="text-align: center; margin: 0.5rem 0; color: var(--subtle-text-color); font-size: 0.9rem;">or</div>
+                    <input
+                        type="text"
+                        id="videoUrl"
+                        placeholder="Paste direct video link (.mp4/.webm)"
+                        class="admin-input"
+                        style="margin-bottom: 0.45rem;"
+                    />
+                    <input
+                        type="text"
+                        id="youtubeUrl"
+                        placeholder="Paste YouTube link"
+                        class="admin-input"
+                        style="margin-bottom: 0.5rem;"
+                    />
+                    <div id="videoPreview" class="image-preview"></div>
+                </div>
                 <div class="form-footer">
                     <span class="char-count">0/500</span>
                     <button class="post-btn" id="postBtn" onclick="postMessage()">Post</button>
@@ -590,12 +622,73 @@
             const imageUpload = document.getElementById('imageUpload');
             const imageUrl = document.getElementById('imageUrl');
             const imagePreview = document.getElementById('imagePreview');
+            const videoUpload = document.getElementById('videoUpload');
+            const videoUrl = document.getElementById('videoUrl');
+            const youtubeUrl = document.getElementById('youtubeUrl');
+            const videoPreview = document.getElementById('videoPreview');
 
             const normalizeImageUrl = (value) => {
                 const raw = (value || '').trim();
                 if (!raw) return '';
                 if (/^(https?:\/\/|data:image\/)/i.test(raw)) return raw;
                 return `https://${raw}`;
+            };
+
+            const normalizeAnyUrl = (value) => {
+                const raw = (value || '').trim();
+                if (!raw) return '';
+                if (/^(https?:\/\/|data:)/i.test(raw)) return raw;
+                return `https://${raw}`;
+            };
+
+            const isYoutubeLink = (url) => /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)/i.test(url || '');
+
+            const extractYouTubeId = (url) => {
+                if (!url) return null;
+                const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{6,15})/i);
+                return match ? match[1] : null;
+            };
+
+            const clearComposerMediaInputs = (modeToKeep = null) => {
+                if (modeToKeep !== 'imageFile' && imageUpload) imageUpload.value = '';
+                if (modeToKeep !== 'imageUrl' && imageUrl) imageUrl.value = '';
+                if (modeToKeep !== 'videoFile' && videoUpload) videoUpload.value = '';
+                if (modeToKeep !== 'videoUrl' && videoUrl) videoUrl.value = '';
+                if (modeToKeep !== 'youtubeUrl' && youtubeUrl) youtubeUrl.value = '';
+            };
+
+            const renderImagePreview = (src) => {
+                imagePreview.innerHTML = `
+                    <div class="preview-container">
+                        <img src="${src}" alt="Preview" />
+                        <button class="remove-image" onclick="removeImage()">×</button>
+                    </div>
+                `;
+            };
+
+            const renderVideoPreview = (src) => {
+                videoPreview.innerHTML = `
+                    <div class="preview-container">
+                        <video src="${src}" controls muted playsinline style="max-width: 100%; max-height: 220px; border-radius: 8px;"></video>
+                        <button class="remove-image" onclick="removeImage()">×</button>
+                    </div>
+                `;
+            };
+
+            const renderYouTubePreview = (url) => {
+                const videoId = extractYouTubeId(url);
+                if (!videoId) {
+                    videoPreview.innerHTML = '<p style="color: var(--subtle-text-color); text-align: center;">Invalid YouTube link.</p>';
+                    return;
+                }
+
+                const embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`;
+                videoPreview.innerHTML = `
+                    <div class="preview-container">
+                        <iframe src="${embedUrl}" title="YouTube Preview" style="width: 100%; height: 220px; border: 0; border-radius: 8px;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        <button class="remove-image" onclick="removeImage()">×</button>
+                    </div>
+                `;
             };
             
             if (!imageUpload) return;
@@ -604,15 +697,11 @@
                 const file = e.target.files[0];
                 if (file) {
                     console.log('Image selected:', file.name, file.type);
-                    imageUrl.value = ''; // Clear URL input
+                    clearComposerMediaInputs('imageFile');
+                    videoPreview.innerHTML = '';
                     const reader = new FileReader();
                     reader.onload = (e) => {
-                        imagePreview.innerHTML = `
-                            <div class="preview-container">
-                                <img src="${e.target.result}" alt="Preview" />
-                                <button class="remove-image" onclick="removeImage()">×</button>
-                            </div>
-                        `;
+                        renderImagePreview(e.target.result);
                     };
                     reader.readAsDataURL(file);
                 }
@@ -623,7 +712,8 @@
                 imageUrl.addEventListener('input', (e) => {
                     const url = normalizeImageUrl(e.target.value);
                     if (url) {
-                        imageUpload.value = ''; // Clear file upload
+                        clearComposerMediaInputs('imageUrl');
+                        videoPreview.innerHTML = '';
                         const looksLikeImage = /^data:image\//i.test(url) || /\.(gif|png|jpe?g|webp|avif|bmp|svg)(\?.*)?(#.*)?$/i.test(url);
                         imagePreview.innerHTML = '';
 
@@ -668,12 +758,69 @@
                     }
                 });
             }
+
+            if (videoUpload) {
+                videoUpload.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+
+                    clearComposerMediaInputs('videoFile');
+                    imagePreview.innerHTML = '';
+
+                    const reader = new FileReader();
+                    reader.onload = (loadEvent) => {
+                        renderVideoPreview(loadEvent.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            if (videoUrl) {
+                videoUrl.addEventListener('input', (e) => {
+                    const url = normalizeAnyUrl(e.target.value);
+                    if (!url) {
+                        videoPreview.innerHTML = '';
+                        return;
+                    }
+
+                    clearComposerMediaInputs('videoUrl');
+                    imagePreview.innerHTML = '';
+                    renderVideoPreview(url);
+                });
+            }
+
+            if (youtubeUrl) {
+                youtubeUrl.addEventListener('input', (e) => {
+                    const url = normalizeAnyUrl(e.target.value);
+                    if (!url) {
+                        videoPreview.innerHTML = '';
+                        return;
+                    }
+
+                    if (!isYoutubeLink(url)) {
+                        videoPreview.innerHTML = '<p style="color: var(--subtle-text-color); text-align: center;">Paste a valid YouTube link.</p>';
+                        return;
+                    }
+
+                    clearComposerMediaInputs('youtubeUrl');
+                    imagePreview.innerHTML = '';
+                    renderYouTubePreview(url);
+                });
+            }
         }
 
         function removeImage() {
             document.getElementById('imageUpload').value = '';
             document.getElementById('imageUrl').value = '';
+            const videoUpload = document.getElementById('videoUpload');
+            const videoUrl = document.getElementById('videoUrl');
+            const youtubeUrl = document.getElementById('youtubeUrl');
+            const videoPreview = document.getElementById('videoPreview');
+            if (videoUpload) videoUpload.value = '';
+            if (videoUrl) videoUrl.value = '';
+            if (youtubeUrl) youtubeUrl.value = '';
             document.getElementById('imagePreview').innerHTML = '';
+            if (videoPreview) videoPreview.innerHTML = '';
         }
 
         // Load messages when page loads
@@ -1061,11 +1208,27 @@
                 messageInput.value = '';
                 const imageUpload = document.getElementById('imageUpload');
                 const imageUrl = document.getElementById('imageUrl');
+                const videoUpload = document.getElementById('videoUpload');
+                const videoUrl = document.getElementById('videoUrl');
+                const youtubeUrl = document.getElementById('youtubeUrl');
                 const autoDeleteSelect = document.getElementById('autoDeleteSelect');
                 if (imageUpload) {
                     imageUpload.value = '';
                     imageUrl.value = '';
                     document.getElementById('imagePreview').innerHTML = '';
+                }
+                if (videoUpload) {
+                    videoUpload.value = '';
+                }
+                if (videoUrl) {
+                    videoUrl.value = '';
+                }
+                if (youtubeUrl) {
+                    youtubeUrl.value = '';
+                }
+                const videoPreview = document.getElementById('videoPreview');
+                if (videoPreview) {
+                    videoPreview.innerHTML = '';
                 }
                 if (autoDeleteSelect) {
                     autoDeleteSelect.value = '1440';
@@ -1128,12 +1291,21 @@
             const messageText = messageInput.value.trim();
             const imageUpload = document.getElementById('imageUpload');
             const imageUrl = document.getElementById('imageUrl');
+            const videoUpload = document.getElementById('videoUpload');
+            const videoUrl = document.getElementById('videoUrl');
+            const youtubeUrl = document.getElementById('youtubeUrl');
             const autoDeleteSelect = document.getElementById('autoDeleteSelect');
             const modalContent = document.querySelector('.modal-content');
             const postBtn = document.getElementById('postBtn');
+
+            const hasImageFile = !!(imageUpload && imageUpload.files[0]);
+            const hasVideoFile = !!(videoUpload && videoUpload.files[0]);
+            const hasImageUrl = !!(imageUrl && imageUrl.value.trim());
+            const hasVideoUrl = !!(videoUrl && videoUrl.value.trim());
+            const hasYoutubeUrl = !!(youtubeUrl && youtubeUrl.value.trim());
             
             // Allow posting if either message, file, or URL is present
-            if (!messageText && (!imageUpload || !imageUpload.files[0]) && (!imageUrl || !imageUrl.value.trim())) {
+            if (!messageText && !hasImageFile && !hasVideoFile && !hasImageUrl && !hasVideoUrl && !hasYoutubeUrl) {
                 modalContent.classList.add('shake');
                 setTimeout(() => modalContent.classList.remove('shake'), 400);
                 return;
@@ -1172,10 +1344,23 @@
                     formData.append('avatar', '🕵️');
                 }
                 
-                if (imageUpload && imageUpload.files[0]) {
+                if (hasImageFile) {
                     console.log('Uploading image:', imageUpload.files[0].name);
-                    formData.append('image', imageUpload.files[0]);
-                } else if (imageUrl && imageUrl.value.trim()) {
+                    formData.append('mediaFile', imageUpload.files[0]);
+                } else if (hasVideoFile) {
+                    console.log('Uploading video:', videoUpload.files[0].name);
+                    formData.append('mediaFile', videoUpload.files[0]);
+                } else if (hasYoutubeUrl) {
+                    const normalizedYoutubeUrl = youtubeUrl.value.trim().match(/^(https?:\/\/|data:)/i)
+                        ? youtubeUrl.value.trim()
+                        : `https://${youtubeUrl.value.trim()}`;
+                    formData.append('youtubeUrl', normalizedYoutubeUrl);
+                } else if (hasVideoUrl) {
+                    const normalizedVideoUrl = videoUrl.value.trim().match(/^(https?:\/\/|data:)/i)
+                        ? videoUrl.value.trim()
+                        : `https://${videoUrl.value.trim()}`;
+                    formData.append('videoUrl', normalizedVideoUrl);
+                } else if (hasImageUrl) {
                     const normalizedImageUrl = imageUrl.value.trim().match(/^(https?:\/\/|data:image\/)/i)
                         ? imageUrl.value.trim()
                         : `https://${imageUrl.value.trim()}`;
@@ -1204,6 +1389,19 @@
                         imageUpload.value = '';
                         imageUrl.value = '';
                         document.getElementById('imagePreview').innerHTML = '';
+                    }
+                    if (videoUpload) {
+                        videoUpload.value = '';
+                    }
+                    if (videoUrl) {
+                        videoUrl.value = '';
+                    }
+                    if (youtubeUrl) {
+                        youtubeUrl.value = '';
+                    }
+                    const videoPreview = document.getElementById('videoPreview');
+                    if (videoPreview) {
+                        videoPreview.innerHTML = '';
                     }
                     updateCharCount();
                     toggleModal();
@@ -1262,6 +1460,131 @@
         function getCommentHeartIcon(isLiked) {
             if (!isLiked) return '♡';
             return document.body.classList.contains('dark-mode') ? '♡' : '♥';
+        }
+
+        const mediaHoverTimers = new Map();
+        const YOUTUBE_PREVIEW_MS = 3500;
+
+        function extractYouTubeId(url) {
+            if (!url) return null;
+            const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{6,15})/i);
+            return match ? match[1] : null;
+        }
+
+        function isYouTubeMedia(url) {
+            return !!extractYouTubeId(url || '');
+        }
+
+        function isVideoMedia(url) {
+            if (!url) return false;
+            if (/^data:video\//i.test(url)) return true;
+            return /\.(mp4|webm|ogg|mov)(\?.*)?(#.*)?$/i.test(url);
+        }
+
+        function getYouTubeEmbedUrl(videoId, autoplay = false) {
+            const autoplayFlag = autoplay ? 1 : 0;
+            return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1&mute=1&autoplay=${autoplayFlag}&controls=0`;
+        }
+
+        function clearMediaHoverTimer(messageId) {
+            const existing = mediaHoverTimers.get(messageId);
+            if (existing) {
+                clearTimeout(existing);
+                mediaHoverTimers.delete(messageId);
+            }
+        }
+
+        function startVideoHoverPreview(messageId) {
+            const videoEl = document.getElementById(`msg-video-${messageId}`);
+            if (!videoEl) return;
+
+            clearMediaHoverTimer(messageId);
+            videoEl.currentTime = 0;
+            const playPromise = videoEl.play();
+            if (playPromise && typeof playPromise.catch === 'function') {
+                playPromise.catch(() => {});
+            }
+
+            const timer = setTimeout(() => {
+                videoEl.pause();
+                videoEl.currentTime = 0;
+                mediaHoverTimers.delete(messageId);
+            }, YOUTUBE_PREVIEW_MS);
+            mediaHoverTimers.set(messageId, timer);
+        }
+
+        function stopVideoHoverPreview(messageId) {
+            const videoEl = document.getElementById(`msg-video-${messageId}`);
+            if (!videoEl) return;
+
+            clearMediaHoverTimer(messageId);
+            videoEl.pause();
+            videoEl.currentTime = 0;
+        }
+
+        function startYouTubeHoverPreview(messageId, videoId) {
+            const iframe = document.getElementById(`msg-yt-${messageId}`);
+            if (!iframe || !videoId) return;
+
+            clearMediaHoverTimer(messageId);
+            iframe.src = getYouTubeEmbedUrl(videoId, true);
+
+            const timer = setTimeout(() => {
+                iframe.src = getYouTubeEmbedUrl(videoId, false);
+                mediaHoverTimers.delete(messageId);
+            }, YOUTUBE_PREVIEW_MS);
+            mediaHoverTimers.set(messageId, timer);
+        }
+
+        function stopYouTubeHoverPreview(messageId, videoId) {
+            const iframe = document.getElementById(`msg-yt-${messageId}`);
+            if (!iframe || !videoId) return;
+
+            clearMediaHoverTimer(messageId);
+            iframe.src = getYouTubeEmbedUrl(videoId, false);
+        }
+
+        function renderMessageMedia(msg) {
+            if (!msg.image) {
+                return '';
+            }
+
+            const mediaUrl = msg.image;
+            const youtubeId = extractYouTubeId(mediaUrl);
+            if (youtubeId) {
+                const embedUrl = getYouTubeEmbedUrl(youtubeId, false);
+                return `
+                    <div class="message-media-wrap" onmouseenter="startYouTubeHoverPreview(${msg.id}, '${youtubeId}')" onmouseleave="stopYouTubeHoverPreview(${msg.id}, '${youtubeId}')">
+                        <iframe id="msg-yt-${msg.id}" class="message-video-embed" src="${embedUrl}" title="YouTube Video Preview" allow="autoplay; encrypted-media; picture-in-picture" loading="lazy"></iframe>
+                    </div>
+                `;
+            }
+
+            if (isVideoMedia(mediaUrl)) {
+                return `
+                    <div class="message-media-wrap" onmouseenter="startVideoHoverPreview(${msg.id})" onmouseleave="stopVideoHoverPreview(${msg.id})">
+                        <video id="msg-video-${msg.id}" class="message-video" src="${mediaUrl}" muted playsinline preload="metadata" controls></video>
+                    </div>
+                `;
+            }
+
+            return `<img src="${mediaUrl}" alt="Attached image" class="message-image" onclick="openImageModal('${mediaUrl}')" />`;
+        }
+
+        function getMessageMediaTypeLabel(msg) {
+            if (!msg || !msg.image) {
+                return null;
+            }
+
+            if (isYouTubeMedia(msg.image)) {
+                return '📺 YouTube';
+            }
+
+            if (isVideoMedia(msg.image)) {
+                return '▶ Video';
+            }
+
+            return '🖼 Image';
         }
 
         function renderReplyItems(replyList, messageId, depth = 0) {
@@ -1389,6 +1712,7 @@
 
                 const hasReplies = (msg.replies || []).length > 0;
                 const repliesList = renderReplyItems(msg.replies || [], msg.id);
+                const mediaTypeLabel = getMessageMediaTypeLabel(msg);
 
                 const inlineRepliesHtml = `
                     <div id="replies-${msg.id}" class="replies-wrapper ${hasReplies ? 'expanded' : ''}" style="display: ${hasReplies ? 'block' : 'none'};">
@@ -1414,6 +1738,7 @@
                                 <span class="message-username">${withAt(username)}</span>
                                 <div class="message-meta-row">
                                     <span class="category-badge"><span class="badge-emoji">${categoryEmojis[msg.category]}</span><span class="badge-text">${msg.category}</span></span>
+                                    ${mediaTypeLabel ? `<span class="media-type-badge">${mediaTypeLabel}</span>` : ''}
                                     <span class="message-time">${timeAgo}</span>
                                     ${msg.expiresAt ? `<span class="expires-badge" data-expires-at="${msg.expiresAt}">${expiresBadgeText}</span>` : ''}
                                 </div>
@@ -1424,7 +1749,7 @@
                         </div>
                     </div>
                     <p class="message-text">${escapeHtml(msg.text)}</p>
-                    ${msg.image ? `<img src="${msg.image}" alt="Attached image" class="message-image" onclick="openImageModal('${msg.image}')" />` : ''}
+                    ${renderMessageMedia(msg)}
                     <div class="message-footer">
                         <button class="like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike(${msg.id}, event)" title="Like this message" aria-label="Like message">
                             <span class="heart-icon">${getLikeHeartIcon(isLiked)}</span>

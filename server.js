@@ -312,22 +312,22 @@ function isValidAdminSession(sessionId) {
     return verifyAdminToken(sessionId);
 }
 
-// Configure multer for image uploads
+// Configure multer for media uploads
 // For Vercel, we need to handle this differently since serverless functions don't have persistent file storage
 const storage = multer.memoryStorage(); // Use memory storage for serverless compatibility
 
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    limits: { fileSize: 20 * 1024 * 1024 }, // 20MB limit
     fileFilter: (req, file, cb) => {
-        const allowedTypes = /jpeg|jpg|gif|png/;
+        const allowedTypes = /jpeg|jpg|gif|png|webp|mp4|webm|ogg|mov|quicktime/;
         const mimetype = allowedTypes.test(file.mimetype);
         const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
         
         if (mimetype && extname) {
             return cb(null, true);
         }
-        cb(new Error('Only JPEG, JPG, GIF, and PNG images are allowed'));
+        cb(new Error('Only supported image/video files are allowed'));
     }
 });
 
@@ -599,14 +599,18 @@ app.post('/api/admin/migrate-local-to-cloud', async (req, res) => {
     });
 });
 
-// Post a new message with optional image
-app.post('/api/messages', upload.single('image'), async (req, res) => {
+// Post a new message with optional media
+app.post('/api/messages', upload.single('mediaFile'), async (req, res) => {
     purgeExpiredMessages();
-    const { message, category, imageUrl, username, avatar, autoDeleteMinutes } = req.body;
+    const { message, category, imageUrl, videoUrl, youtubeUrl, username, avatar, autoDeleteMinutes } = req.body;
     
-    // Allow posting if either message, file, or URL is present
-    if ((!message || message.trim() === '') && !req.file && (!imageUrl || !imageUrl.trim())) {
-        return res.status(400).json({ error: 'Message or image is required' });
+    const hasImageUrl = typeof imageUrl === 'string' && imageUrl.trim().length > 0;
+    const hasVideoUrl = typeof videoUrl === 'string' && videoUrl.trim().length > 0;
+    const hasYoutubeUrl = typeof youtubeUrl === 'string' && youtubeUrl.trim().length > 0;
+
+    // Allow posting if either message, file, or media URL is present
+    if ((!message || message.trim() === '') && !req.file && !hasImageUrl && !hasVideoUrl && !hasYoutubeUrl) {
+        return res.status(400).json({ error: 'Message or media is required' });
     }
     
     const validCategories = ['whistleblower', 'controversy', 'thoughts', 'confessions', 'others'];
@@ -622,14 +626,17 @@ app.post('/api/messages', upload.single('image'), async (req, res) => {
 
     const expiresAt = new Date(Date.now() + parsedMinutes * 60 * 1000).toISOString();
     
-    // Handle image - either from file upload or URL
+    // Handle media - file upload or URLs
     let imageDataUrl = null;
     if (req.file) {
         // Convert uploaded file buffer to base64 data URL for serverless compatibility
         const base64 = req.file.buffer.toString('base64');
         imageDataUrl = `data:${req.file.mimetype};base64,${base64}`;
-    } else if (imageUrl && imageUrl.trim()) {
-        // Use the provided URL directly
+    } else if (hasYoutubeUrl) {
+        imageDataUrl = youtubeUrl.trim();
+    } else if (hasVideoUrl) {
+        imageDataUrl = videoUrl.trim();
+    } else if (hasImageUrl) {
         imageDataUrl = imageUrl.trim();
     }
     
