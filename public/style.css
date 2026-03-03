@@ -1713,6 +1713,69 @@ body.dark-mode .message-avatar {
     margin-bottom: 0.25rem;
 }
 
+.message-link {
+    color: var(--accent-color);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    word-break: break-all;
+}
+
+.message-link:hover {
+    color: var(--accent-color-hover);
+}
+
+.link-preview-card {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-top: 0.7rem;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(0, 113, 227, 0.06), rgba(0, 113, 227, 0.02));
+    text-decoration: none;
+    color: var(--text-color);
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.link-preview-card:hover {
+    transform: translateY(-1px);
+    border-color: var(--accent-color);
+    box-shadow: 0 6px 16px rgba(0, 113, 227, 0.14);
+}
+
+.link-preview-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 113, 227, 0.12);
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.link-preview-body {
+    min-width: 0;
+}
+
+.link-preview-host {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--text-color);
+    line-height: 1.2;
+}
+
+.link-preview-url {
+    margin-top: 0.16rem;
+    font-size: 0.78rem;
+    color: var(--subtle-text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .section-icon {
     display: inline-flex;
     align-items: center;

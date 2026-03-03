@@ -1571,6 +1571,77 @@
             return `<img src="${mediaUrl}" alt="Attached image" class="message-image" onclick="openImageModal('${mediaUrl}')" />`;
         }
 
+        function extractUrlsFromText(text) {
+            if (!text || typeof text !== 'string') {
+                return [];
+            }
+
+            const matches = text.match(/https?:\/\/[^\s<>"]+/gi);
+            return matches ? Array.from(new Set(matches)) : [];
+        }
+
+        function getSafeHttpUrl(url) {
+            if (!url) return null;
+            try {
+                const parsed = new URL(url);
+                if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+                    return null;
+                }
+                return parsed.toString();
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function renderMessageTextWithLinks(text) {
+            const safeText = escapeHtml(text || '');
+            return safeText.replace(/https?:\/\/[^\s<>"]+/gi, (rawUrl) => {
+                const safeUrl = getSafeHttpUrl(rawUrl);
+                if (!safeUrl) {
+                    return rawUrl;
+                }
+
+                const displayUrl = rawUrl.length > 60 ? `${rawUrl.slice(0, 57)}...` : rawUrl;
+                return `<a class="message-link" href="${safeUrl}" target="_blank" rel="noopener noreferrer">${displayUrl}</a>`;
+            });
+        }
+
+        function buildLinkPreviewHtml(text) {
+            const urls = extractUrlsFromText(text);
+            if (!urls.length) {
+                return '';
+            }
+
+            const firstSafeUrl = getSafeHttpUrl(urls[0]);
+            if (!firstSafeUrl) {
+                return '';
+            }
+
+            let hostname = '';
+            let pathname = '';
+            try {
+                const parsed = new URL(firstSafeUrl);
+                hostname = parsed.hostname.replace(/^www\./i, '');
+                pathname = parsed.pathname && parsed.pathname !== '/' ? parsed.pathname : '';
+            } catch (error) {
+                return '';
+            }
+
+            const summary = pathname
+                ? `${hostname}${pathname.length > 36 ? `${pathname.slice(0, 36)}...` : pathname}`
+                : hostname;
+
+            return `
+                <a class="link-preview-card" href="${firstSafeUrl}" target="_blank" rel="noopener noreferrer">
+                    <div class="link-preview-icon">🔗</div>
+                    <div class="link-preview-body">
+                        <div class="link-preview-host">${escapeHtml(hostname)}</div>
+                        <div class="link-preview-url">${escapeHtml(summary)}</div>
+                    </div>
+                </a>
+            `;
+        }
+
         function getMessageMediaTypeLabel(msg) {
             if (!msg || !msg.image) {
                 return null;
@@ -1748,7 +1819,8 @@
                             <button class="delete-btn" onclick="deleteMessage(${msg.id})" title="Delete message" aria-label="Delete message">×</button>
                         </div>
                     </div>
-                    <p class="message-text">${escapeHtml(msg.text)}</p>
+                    <p class="message-text">${renderMessageTextWithLinks(msg.text)}</p>
+                    ${buildLinkPreviewHtml(msg.text)}
                     ${renderMessageMedia(msg)}
                     <div class="message-footer">
                         <button class="like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike(${msg.id}, event)" title="Like this message" aria-label="Like message">
