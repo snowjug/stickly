@@ -8,6 +8,33 @@ A modern, feature-rich anonymous message board where users can share their thoug
 ![Node](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen.svg)
 ![Express](https://img.shields.io/badge/express-4.18.2-lightgrey.svg)
 
+## Supabase Setup (Vercel + Local)
+
+Set these environment variables in Vercel (`Development`, `Preview`, `Production`) and optionally in local `.env`:
+
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_MESSAGES_TABLE=stickly_messages` (optional; defaults to `stickly_messages`)
+
+Run SQL setup from `supabase/stickly_messages.sql` in Supabase SQL Editor.
+
+Quick API checks:
+
+- `GET /api/supabase-test` → reads from `notes`
+- `POST /api/supabase-test` with `{ "title": "hello" }` → inserts into `notes`
+
+Message sync behavior:
+
+- `POST /api/messages` upserts message to Supabase table (`stickly_messages`)
+- Like/unlike/reply/report updates sync to Supabase
+- Admin delete marks message as `deleted=true` in Supabase
+
+One-time migration:
+
+- Login as admin (`POST /api/admin/login`) to get `sessionId`
+- Run `POST /api/admin/migrate-local-to-cloud` with `{ "sessionId": "..." }`
+- This upserts all current local JSON messages into Supabase without duplicate inserts
+
 ## 🌐 Service Ports & URLs (general)
 
 | Service | Port | Local URL | Description |

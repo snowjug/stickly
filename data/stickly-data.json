@@ -1,18 +1,5 @@
 {
-  "messages": [
-    {
-      "id": 1772466013071,
-      "text": "Nigga",
-      "category": "thoughts",
-      "timestamp": "2026-03-02T15:40:13.071Z",
-      "image": null,
-      "likes": 0,
-      "username": "Anonymous",
-      "avatar": "🕵️",
-      "expiresAt": "2026-03-03T15:40:13.071Z",
-      "replies": []
-    }
-  ],
+  "messages": [],
   "messageLikes": {},
   "messageReports": {}
 }

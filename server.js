@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
+const { createClient } = require('@supabase/supabase-js');
 
 // Prometheus metrics
 // const client = require('prom-client');
@@ -26,6 +27,153 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_DIR = path.join(__dirname, 'data');
 const DATA_FILE = path.join(DATA_DIR, 'stickly-data.json');
+
+const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabase = (supabaseUrl && supabaseServiceRoleKey)
+    ? createClient(supabaseUrl, supabaseServiceRoleKey)
+    : null;
+const supabaseMessagesTable = process.env.SUPABASE_MESSAGES_TABLE || 'stickly_messages';
+
+function toSupabaseMessageRow(messagePayload, reports = []) {
+    return {
+        message_id: messagePayload.id,
+        text: messagePayload.text || '',
+        category: messagePayload.category || 'thoughts',
+        timestamp: messagePayload.timestamp || new Date().toISOString(),
+        image: messagePayload.image || null,
+        likes: Number.isFinite(messagePayload.likes) ? messagePayload.likes : 0,
+        username: messagePayload.username || 'Anonymous',
+        avatar: messagePayload.avatar || '👤',
+        expires_at: messagePayload.expiresAt || null,
+        replies: Array.isArray(messagePayload.replies) ? messagePayload.replies : [],
+        reports: Array.isArray(reports) ? reports : [],
+        deleted: false,
+        updated_at: new Date().toISOString()
+    };
+}
+
+async function upsertMessageToSupabase(messagePayload, reports = []) {
+    if (!supabase || !messagePayload) {
+        return;
+    }
+
+    const row = toSupabaseMessageRow(messagePayload, reports);
+    const { error } = await supabase
+        .from(supabaseMessagesTable)
+        .upsert(row, { onConflict: 'message_id' });
+
+    if (error) {
+        console.error('Supabase message sync failed:', error.message);
+    }
+}
+
+async function syncMessageStateToSupabase(messageId) {
+    if (!supabase) {
+        return;
+    }
+
+    const message = messages.find(msg => msg.id === messageId);
+    if (!message) {
+        return;
+    }
+
+    const reports = Array.isArray(messageReports[messageId]) ? messageReports[messageId] : [];
+    await upsertMessageToSupabase(message, reports);
+}
+
+async function markMessageDeletedInSupabase(messageId) {
+    if (!supabase) {
+        return;
+    }
+
+    const { error } = await supabase
+        .from(supabaseMessagesTable)
+        .update({ deleted: true, updated_at: new Date().toISOString() })
+        .eq('message_id', messageId);
+
+    if (error) {
+        console.error('Supabase delete sync failed:', error.message);
+    }
+}
+
+function normalizeMessageFromSupabase(row) {
+    return {
+        id: row.message_id,
+        text: row.text || '',
+        category: row.category || 'thoughts',
+        timestamp: row.timestamp || new Date().toISOString(),
+        image: row.image || null,
+        likes: Number.isFinite(row.likes) ? row.likes : 0,
+        username: row.username || 'Anonymous',
+        avatar: row.avatar || '👤',
+        expiresAt: row.expires_at || null,
+        replies: Array.isArray(row.replies) ? row.replies : []
+    };
+}
+
+function rebuildLocalIndexesFromMessages(rows) {
+    messageLikes = {};
+    messageReports = {};
+
+    rows.forEach(message => {
+        messageLikes[message.id] = Number.isFinite(message.likes) ? message.likes : 0;
+        if (Array.isArray(message.reports) && message.reports.length > 0) {
+            messageReports[message.id] = message.reports;
+        }
+    });
+}
+
+async function purgeExpiredMessagesInSupabase() {
+    if (!supabase) {
+        return;
+    }
+
+    const nowIso = new Date().toISOString();
+    const { error } = await supabase
+        .from(supabaseMessagesTable)
+        .update({ deleted: true, updated_at: nowIso })
+        .eq('deleted', false)
+        .lte('expires_at', nowIso);
+
+    if (error) {
+        console.error('Supabase expiry sync failed:', error.message);
+    }
+}
+
+async function hydrateMessagesFromSupabase() {
+    if (!supabase) {
+        return;
+    }
+
+    await purgeExpiredMessagesInSupabase();
+
+    const { data, error } = await supabase
+        .from(supabaseMessagesTable)
+        .select('*')
+        .eq('deleted', false)
+        .order('timestamp', { ascending: false })
+        .limit(500);
+
+    if (error) {
+        console.error('Supabase read failed:', error.message);
+        return;
+    }
+
+    const now = Date.now();
+    const filtered = (data || []).filter(row => {
+        if (!row.expires_at) {
+            return true;
+        }
+
+        const expiryMs = new Date(row.expires_at).getTime();
+        return Number.isFinite(expiryMs) && expiryMs > now;
+    });
+
+    messages = filtered.map(normalizeMessageFromSupabase);
+    rebuildLocalIndexesFromMessages(filtered);
+    savePersistedState();
+}
 
 // Admin credentials (in production, use environment variables and hashed passwords)
 const ADMIN_USERNAME = 'admin';
@@ -111,6 +259,10 @@ function purgeExpiredMessages() {
     expiredMessageIds.forEach(messageId => {
         delete messageLikes[messageId];
         delete messageReports[messageId];
+
+        markMessageDeletedInSupabase(messageId).catch(err => {
+            console.error('Supabase delete sync failed:', err.message);
+        });
     });
 
     if (expiredMessageIds.length > 0) {
@@ -118,7 +270,10 @@ function purgeExpiredMessages() {
     }
 }
 
-setInterval(purgeExpiredMessages, 30 * 1000);
+const purgeInterval = setInterval(purgeExpiredMessages, 30 * 1000);
+if (typeof purgeInterval.unref === 'function') {
+    purgeInterval.unref();
+}
 
 // Middleware to measure metrics
 app.use((req, res, next) => {
@@ -141,8 +296,10 @@ app.get('/', (req, res) => {
 });
 
 // Get all messages or filter by category
-app.get('/api/messages', (req, res) => {
+app.get('/api/messages', async (req, res) => {
     purgeExpiredMessages();
+    await hydrateMessagesFromSupabase();
+
     const { category } = req.query;
     
     if (category && category !== 'all') {
@@ -151,6 +308,93 @@ app.get('/api/messages', (req, res) => {
     }
     
     res.json(messages);
+});
+
+app.get('/api/messages/cloud', async (req, res) => {
+    if (!supabase) {
+        return res.status(500).json({
+            ok: false,
+            error: 'Missing SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) or SUPABASE_SERVICE_ROLE_KEY env vars.'
+        });
+    }
+
+    await purgeExpiredMessagesInSupabase();
+
+    const { category, includeDeleted } = req.query;
+    let query = supabase
+        .from(supabaseMessagesTable)
+        .select('*')
+        .order('timestamp', { ascending: false })
+        .limit(100);
+
+    if (includeDeleted !== 'true') {
+        query = query.eq('deleted', false);
+    }
+
+    if (category && category !== 'all') {
+        query = query.eq('category', category);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+        return res.status(500).json({ ok: false, error: error.message });
+    }
+
+    const now = Date.now();
+    const activeData = (data || []).filter(row => {
+        if (!row.expires_at) {
+            return true;
+        }
+
+        const expiryMs = new Date(row.expires_at).getTime();
+        return Number.isFinite(expiryMs) && expiryMs > now;
+    });
+
+    return res.json({ ok: true, table: supabaseMessagesTable, count: activeData.length, data: activeData });
+});
+
+app.get('/api/supabase-test', async (req, res) => {
+    if (!supabase) {
+        return res.status(500).json({
+            ok: false,
+            error: 'Missing SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) or SUPABASE_SERVICE_ROLE_KEY env vars.'
+        });
+    }
+
+    const { data, error } = await supabase.from('notes').select('*').limit(10);
+
+    if (error) {
+        return res.status(500).json({ ok: false, error: error.message });
+    }
+
+    return res.json({ ok: true, data });
+});
+
+app.post('/api/supabase-test', async (req, res) => {
+    if (!supabase) {
+        return res.status(500).json({
+            ok: false,
+            error: 'Missing SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) or SUPABASE_SERVICE_ROLE_KEY env vars.'
+        });
+    }
+
+    const title = typeof req.body?.title === 'string' ? req.body.title.trim() : '';
+    if (!title) {
+        return res.status(400).json({ ok: false, error: 'title is required' });
+    }
+
+    const { data, error } = await supabase
+        .from('notes')
+        .insert({ title })
+        .select('*')
+        .single();
+
+    if (error) {
+        return res.status(500).json({ ok: false, error: error.message });
+    }
+
+    return res.status(201).json({ ok: true, data });
 });
 
 // Admin login
@@ -179,8 +423,49 @@ app.post('/api/admin/check', (req, res) => {
     res.json({ isAdmin: adminSessions.has(sessionId) });
 });
 
+app.post('/api/admin/migrate-local-to-cloud', async (req, res) => {
+    const { sessionId } = req.body;
+
+    if (!adminSessions.has(sessionId)) {
+        return res.status(403).json({ error: 'Unauthorized. Admin access required.' });
+    }
+
+    if (!supabase) {
+        return res.status(500).json({
+            ok: false,
+            error: 'Missing SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) or SUPABASE_SERVICE_ROLE_KEY env vars.'
+        });
+    }
+
+    purgeExpiredMessages();
+
+    const migrationRows = messages.map(message => {
+        const reports = Array.isArray(messageReports[message.id]) ? messageReports[message.id] : [];
+        return toSupabaseMessageRow(message, reports);
+    });
+
+    if (migrationRows.length === 0) {
+        return res.json({ ok: true, migrated: 0, skipped: 0, table: supabaseMessagesTable });
+    }
+
+    const { error } = await supabase
+        .from(supabaseMessagesTable)
+        .upsert(migrationRows, { onConflict: 'message_id' });
+
+    if (error) {
+        return res.status(500).json({ ok: false, error: error.message });
+    }
+
+    return res.json({
+        ok: true,
+        migrated: migrationRows.length,
+        skipped: 0,
+        table: supabaseMessagesTable
+    });
+});
+
 // Post a new message with optional image
-app.post('/api/messages', upload.single('image'), (req, res) => {
+app.post('/api/messages', upload.single('image'), async (req, res) => {
     purgeExpiredMessages();
     const { message, category, imageUrl, username, avatar, autoDeleteMinutes } = req.body;
     
@@ -228,12 +513,17 @@ app.post('/api/messages', upload.single('image'), (req, res) => {
     
     messages.unshift(newMessage); // Add to beginning of array
     savePersistedState();
+
+    await upsertMessageToSupabase(newMessage);
+
     res.status(201).json(newMessage);
 });
 
 // Delete a message (admin only)
-app.delete('/api/messages/:id', (req, res) => {
+app.delete('/api/messages/:id', async (req, res) => {
     purgeExpiredMessages();
+    await hydrateMessagesFromSupabase();
+
     const { sessionId } = req.body;
     
     // Check if user is admin
@@ -249,6 +539,9 @@ app.delete('/api/messages/:id', (req, res) => {
     }
     
     messages.splice(index, 1);
+
+    await markMessageDeletedInSupabase(messageId);
+
     // Clean up likes and reports
     delete messageLikes[messageId];
     delete messageReports[messageId];
@@ -257,8 +550,10 @@ app.delete('/api/messages/:id', (req, res) => {
 });
 
 // Like a message
-app.post('/api/messages/:id/like', (req, res) => {
+app.post('/api/messages/:id/like', async (req, res) => {
     purgeExpiredMessages();
+    await hydrateMessagesFromSupabase();
+
     const messageId = parseInt(req.params.id);
     const message = messages.find(msg => msg.id === messageId);
     
@@ -274,13 +569,17 @@ app.post('/api/messages/:id/like', (req, res) => {
     messageLikes[messageId]++;
     message.likes = messageLikes[messageId];
     savePersistedState();
+
+    await syncMessageStateToSupabase(messageId);
     
     res.json({ likes: messageLikes[messageId] });
 });
 
 // Unlike a message
-app.post('/api/messages/:id/unlike', (req, res) => {
+app.post('/api/messages/:id/unlike', async (req, res) => {
     purgeExpiredMessages();
+    await hydrateMessagesFromSupabase();
+
     const messageId = parseInt(req.params.id);
     const message = messages.find(msg => msg.id === messageId);
     
@@ -292,14 +591,18 @@ app.post('/api/messages/:id/unlike', (req, res) => {
         messageLikes[messageId]--;
         message.likes = messageLikes[messageId];
         savePersistedState();
+
+        await syncMessageStateToSupabase(messageId);
     }
     
     res.json({ likes: messageLikes[messageId] || 0 });
 });
 
 // Reply to a message
-app.post('/api/messages/:id/reply', (req, res) => {
+app.post('/api/messages/:id/reply', async (req, res) => {
     purgeExpiredMessages();
+    await hydrateMessagesFromSupabase();
+
     const messageId = parseInt(req.params.id);
     const { text, username, avatar } = req.body;
     const message = messages.find(msg => msg.id === messageId);
@@ -326,12 +629,17 @@ app.post('/api/messages/:id/reply', (req, res) => {
 
     message.replies.push(reply);
     savePersistedState();
+
+    await syncMessageStateToSupabase(messageId);
+
     res.status(201).json(reply);
 });
 
 // Report a message
-app.post('/api/messages/:id/report', (req, res) => {
+app.post('/api/messages/:id/report', async (req, res) => {
     purgeExpiredMessages();
+    await hydrateMessagesFromSupabase();
+
     const messageId = parseInt(req.params.id);
     const { reason } = req.body;
     const message = messages.find(msg => msg.id === messageId);
@@ -350,13 +658,17 @@ app.post('/api/messages/:id/report', (req, res) => {
     });
 
     savePersistedState();
+
+    await syncMessageStateToSupabase(messageId);
     
     res.json({ success: true, reportCount: messageReports[messageId].length });
 });
 
 // Get reported messages (admin only)
-app.post('/api/admin/reports', (req, res) => {
+app.post('/api/admin/reports', async (req, res) => {
     purgeExpiredMessages();
+    await hydrateMessagesFromSupabase();
+
     const { sessionId } = req.body;
     
     if (!adminSessions.has(sessionId)) {
@@ -377,8 +689,10 @@ app.post('/api/admin/reports', (req, res) => {
 });
 
 // Get message counts by category
-app.get('/api/messages/counts', (req, res) => {
+app.get('/api/messages/counts', async (req, res) => {
     purgeExpiredMessages();
+    await hydrateMessagesFromSupabase();
+
     const counts = {
         all: messages.length,
         whistleblower: messages.filter(m => m.category === 'whistleblower').length,
