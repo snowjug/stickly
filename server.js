@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
+const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
 
 // Prometheus metrics
@@ -242,6 +243,74 @@ async function hydrateMessagesFromSupabase() {
 const ADMIN_USERNAME = 'admin';
 const ADMIN_PASSWORD = 'admin123';
 let adminSessions = new Set(); // Store active admin sessions
+const ADMIN_TOKEN_SECRET = process.env.ADMIN_TOKEN_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || 'stickly-admin-secret';
+const ADMIN_TOKEN_TTL_MS = 12 * 60 * 60 * 1000;
+
+function base64UrlEncode(value) {
+    return Buffer.from(value, 'utf8').toString('base64url');
+}
+
+function base64UrlDecode(value) {
+    return Buffer.from(value, 'base64url').toString('utf8');
+}
+
+function signAdminToken(payloadBase64) {
+    return crypto
+        .createHmac('sha256', ADMIN_TOKEN_SECRET)
+        .update(payloadBase64)
+        .digest('base64url');
+}
+
+function createAdminToken() {
+    const payload = {
+        username: ADMIN_USERNAME,
+        exp: Date.now() + ADMIN_TOKEN_TTL_MS
+    };
+
+    const payloadBase64 = base64UrlEncode(JSON.stringify(payload));
+    const signature = signAdminToken(payloadBase64);
+    return `${payloadBase64}.${signature}`;
+}
+
+function verifyAdminToken(token) {
+    if (!token || typeof token !== 'string') {
+        return false;
+    }
+
+    const [payloadBase64, signature] = token.split('.');
+    if (!payloadBase64 || !signature) {
+        return false;
+    }
+
+    const expectedSignature = signAdminToken(payloadBase64);
+    if (expectedSignature !== signature) {
+        return false;
+    }
+
+    try {
+        const payloadRaw = base64UrlDecode(payloadBase64);
+        const payload = JSON.parse(payloadRaw);
+        if (payload.username !== ADMIN_USERNAME) {
+            return false;
+        }
+
+        return Number.isFinite(payload.exp) && payload.exp > Date.now();
+    } catch (error) {
+        return false;
+    }
+}
+
+function isValidAdminSession(sessionId) {
+    if (!sessionId) {
+        return false;
+    }
+
+    if (adminSessions.has(sessionId)) {
+        return true;
+    }
+
+    return verifyAdminToken(sessionId);
+}
 
 // Configure multer for image uploads
 // For Vercel, we need to handle this differently since serverless functions don't have persistent file storage
@@ -468,7 +537,7 @@ app.post('/api/admin/login', (req, res) => {
     const { username, password } = req.body;
     
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-        const sessionId = Date.now() + '-' + Math.random().toString(36);
+        const sessionId = createAdminToken();
         adminSessions.add(sessionId);
         res.json({ success: true, sessionId });
     } else {
@@ -486,13 +555,13 @@ app.post('/api/admin/logout', (req, res) => {
 // Check admin status
 app.post('/api/admin/check', (req, res) => {
     const { sessionId } = req.body;
-    res.json({ isAdmin: adminSessions.has(sessionId) });
+    res.json({ isAdmin: isValidAdminSession(sessionId) });
 });
 
 app.post('/api/admin/migrate-local-to-cloud', async (req, res) => {
     const { sessionId } = req.body;
 
-    if (!adminSessions.has(sessionId)) {
+    if (!isValidAdminSession(sessionId)) {
         return res.status(403).json({ error: 'Unauthorized. Admin access required.' });
     }
 
@@ -596,7 +665,7 @@ app.delete('/api/messages/:id', async (req, res) => {
         req.query?.sessionId;
     
     // Check if user is admin
-    if (!adminSessions.has(sessionId)) {
+    if (!isValidAdminSession(sessionId)) {
         return res.status(403).json({ error: 'Unauthorized. Admin access required.' });
     }
     
@@ -838,7 +907,7 @@ app.delete('/api/messages/:id/replies/:replyId', async (req, res) => {
         return res.status(404).json({ error: 'Comment not found' });
     }
 
-    const isAdmin = typeof sessionId === 'string' && adminSessions.has(sessionId);
+    const isAdmin = typeof sessionId === 'string' && isValidAdminSession(sessionId);
     const ownsReply = typeof authorSessionId === 'string' &&
         typeof targetReply.authorSessionId === 'string' &&
         targetReply.authorSessionId === authorSessionId;
@@ -894,7 +963,7 @@ app.post('/api/admin/reports', async (req, res) => {
 
     const { sessionId } = req.body;
     
-    if (!adminSessions.has(sessionId)) {
+    if (!isValidAdminSession(sessionId)) {
         return res.status(403).json({ error: 'Unauthorized' });
     }
     
