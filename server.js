@@ -115,8 +115,43 @@ function normalizeMessageFromSupabase(row) {
         username: row.username || 'Anonymous',
         avatar: row.avatar || '👤',
         expiresAt: row.expires_at || null,
-        replies: Array.isArray(row.replies) ? row.replies : []
+        replies: normalizeReplyTree(row.replies)
     };
+}
+
+function normalizeReplyTree(replies) {
+    if (!Array.isArray(replies)) {
+        return [];
+    }
+
+    return replies.map(reply => ({
+        id: Number.isFinite(reply?.id) ? reply.id : Date.now() + Math.floor(Math.random() * 1000),
+        text: typeof reply?.text === 'string' ? reply.text : '',
+        username: reply?.username || 'Anonymous',
+        avatar: reply?.avatar || '👤',
+        timestamp: reply?.timestamp || new Date().toISOString(),
+        likes: Number.isFinite(reply?.likes) ? reply.likes : 0,
+        replies: normalizeReplyTree(reply?.replies)
+    }));
+}
+
+function findReplyById(replyList, replyId) {
+    if (!Array.isArray(replyList)) {
+        return null;
+    }
+
+    for (const reply of replyList) {
+        if (reply.id === replyId) {
+            return reply;
+        }
+
+        const nestedMatch = findReplyById(reply.replies, replyId);
+        if (nestedMatch) {
+            return nestedMatch;
+        }
+    }
+
+    return null;
 }
 
 function rebuildLocalIndexesFromMessages(rows) {
@@ -243,7 +278,10 @@ function savePersistedState() {
 }
 
 const persistedState = loadPersistedState();
-let messages = persistedState.messages;
+let messages = persistedState.messages.map(message => ({
+    ...message,
+    replies: normalizeReplyTree(message.replies)
+}));
 let messageLikes = persistedState.messageLikes; // Track likes per message: { messageId: count }
 let messageReports = persistedState.messageReports; // Track reports per message: { messageId: [reasons] }
 const AUTO_DELETE_MINUTES = new Set([1, 30, 60, 1440, 10080]);
@@ -631,7 +669,9 @@ app.post('/api/messages/:id/reply', async (req, res) => {
         text: text.trim(),
         username: username || 'Anonymous',
         avatar: avatar || '👤',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        likes: 0,
+        replies: []
     };
 
     message.replies.push(reply);
@@ -640,6 +680,114 @@ app.post('/api/messages/:id/reply', async (req, res) => {
     await syncMessageStateToSupabase(messageId);
 
     res.status(201).json(reply);
+});
+
+// Like a comment/reply
+app.post('/api/messages/:id/replies/:replyId/like', async (req, res) => {
+    purgeExpiredMessages();
+    await hydrateMessagesFromSupabase();
+
+    const messageId = parseInt(req.params.id);
+    const replyId = parseInt(req.params.replyId);
+    const message = messages.find(msg => msg.id === messageId);
+
+    if (!message) {
+        return res.status(404).json({ error: 'Message not found' });
+    }
+
+    const reply = findReplyById(message.replies, replyId);
+    if (!reply) {
+        return res.status(404).json({ error: 'Comment not found' });
+    }
+
+    if (!Number.isFinite(reply.likes)) {
+        reply.likes = 0;
+    }
+
+    reply.likes += 1;
+    savePersistedState();
+
+    await syncMessageStateToSupabase(messageId);
+
+    res.json({ likes: reply.likes });
+});
+
+// Unlike a comment/reply
+app.post('/api/messages/:id/replies/:replyId/unlike', async (req, res) => {
+    purgeExpiredMessages();
+    await hydrateMessagesFromSupabase();
+
+    const messageId = parseInt(req.params.id);
+    const replyId = parseInt(req.params.replyId);
+    const message = messages.find(msg => msg.id === messageId);
+
+    if (!message) {
+        return res.status(404).json({ error: 'Message not found' });
+    }
+
+    const reply = findReplyById(message.replies, replyId);
+    if (!reply) {
+        return res.status(404).json({ error: 'Comment not found' });
+    }
+
+    if (!Number.isFinite(reply.likes)) {
+        reply.likes = 0;
+    }
+
+    if (reply.likes > 0) {
+        reply.likes -= 1;
+    }
+
+    savePersistedState();
+
+    await syncMessageStateToSupabase(messageId);
+
+    res.json({ likes: reply.likes });
+});
+
+// Reply to an existing comment/reply
+app.post('/api/messages/:id/replies/:replyId/reply', async (req, res) => {
+    purgeExpiredMessages();
+    await hydrateMessagesFromSupabase();
+
+    const messageId = parseInt(req.params.id);
+    const replyId = parseInt(req.params.replyId);
+    const { text, username, avatar } = req.body;
+    const message = messages.find(msg => msg.id === messageId);
+
+    if (!message) {
+        return res.status(404).json({ error: 'Message not found' });
+    }
+
+    if (!text || text.trim() === '') {
+        return res.status(400).json({ error: 'Reply text is required' });
+    }
+
+    const parentReply = findReplyById(message.replies, replyId);
+    if (!parentReply) {
+        return res.status(404).json({ error: 'Comment not found' });
+    }
+
+    if (!Array.isArray(parentReply.replies)) {
+        parentReply.replies = [];
+    }
+
+    const nestedReply = {
+        id: Date.now(),
+        text: text.trim(),
+        username: username || 'Anonymous',
+        avatar: avatar || '👤',
+        timestamp: new Date().toISOString(),
+        likes: 0,
+        replies: []
+    };
+
+    parentReply.replies.push(nestedReply);
+    savePersistedState();
+
+    await syncMessageStateToSupabase(messageId);
+
+    res.status(201).json(nestedReply);
 });
 
 // Report a message

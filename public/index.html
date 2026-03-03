@@ -307,6 +307,7 @@
         let autoRefreshIntervalId = null;
         let isLoadingMessages = false;
         const likeRequestsInFlight = new Set();
+        const commentLikeRequestsInFlight = new Set();
 
         // Admin functions
         function toggleAdminModal() {
@@ -667,11 +668,18 @@
 
         function isReplyInteractionActive() {
             const activeElement = document.activeElement;
-            if (activeElement && activeElement.classList && activeElement.classList.contains('reply-input')) {
+            if (
+                activeElement &&
+                activeElement.classList &&
+                (activeElement.classList.contains('reply-input') || activeElement.classList.contains('comment-reply-input'))
+            ) {
                 return true;
             }
 
-            return Array.from(document.querySelectorAll('.reply-input')).some(input => input.value.trim().length > 0);
+            const hasMainReplyDraft = Array.from(document.querySelectorAll('.reply-input')).some(input => input.value.trim().length > 0);
+            const hasCommentReplyDraft = Array.from(document.querySelectorAll('.comment-reply-input')).some(input => input.value.trim().length > 0);
+
+            return hasMainReplyDraft || hasCommentReplyDraft;
         }
 
         function startAutoRefresh() {
@@ -780,6 +788,13 @@
                 if (!heart) return;
                 const isLiked = btn.classList.contains('liked');
                 heart.textContent = getLikeHeartIcon(isLiked);
+            });
+
+            document.querySelectorAll('.comment-like-btn').forEach(btn => {
+                const heart = btn.querySelector('.comment-heart-icon');
+                if (!heart) return;
+                const isLiked = btn.classList.contains('liked');
+                heart.textContent = getCommentHeartIcon(isLiked);
             });
         }
 
@@ -1143,6 +1158,69 @@
             }
         }
 
+        function countTotalReplies(replyList) {
+            if (!Array.isArray(replyList) || replyList.length === 0) {
+                return 0;
+            }
+
+            return replyList.reduce((total, reply) => {
+                const nestedCount = countTotalReplies(reply.replies || []);
+                return total + 1 + nestedCount;
+            }, 0);
+        }
+
+        function getCommentLikeKey(messageId, replyId) {
+            return `${messageId}:${replyId}`;
+        }
+
+        function isCommentLiked(messageId, replyId) {
+            return likedComments.includes(getCommentLikeKey(messageId, replyId));
+        }
+
+        function getCommentHeartIcon(isLiked) {
+            if (!isLiked) return '♡';
+            return document.body.classList.contains('dark-mode') ? '♡' : '♥';
+        }
+
+        function renderReplyItems(replyList, messageId, depth = 0) {
+            if (!Array.isArray(replyList) || replyList.length === 0) {
+                return '';
+            }
+
+            return replyList.map(reply => {
+                const nestedReplies = Array.isArray(reply.replies) ? reply.replies : [];
+                const nestedCount = nestedReplies.length;
+                const commentLiked = isCommentLiked(messageId, reply.id);
+                const commentLikes = Number.isFinite(reply.likes) ? reply.likes : 0;
+
+                return `
+                    <div class="reply-item" data-reply-id="${reply.id}" data-depth="${depth}">
+                        <div class="reply-header">
+                            <span class="reply-avatar">${reply.avatar || '👤'}</span>
+                            <span class="reply-author">@${escapeHtml((reply.username || 'Anonymous').replace(/^@+/, ''))}</span>
+                            <span class="reply-time">• ${getTimeAgo(new Date(reply.timestamp))}</span>
+                        </div>
+                        <div class="reply-content">${escapeHtml(reply.text || '')}</div>
+                        <div class="comment-actions-row">
+                            <button class="comment-like-btn ${commentLiked ? 'liked' : ''}" onclick="toggleCommentLike(${messageId}, ${reply.id}, event)" title="Like this comment" aria-label="Like comment">
+                                <span class="comment-heart-icon">${getCommentHeartIcon(commentLiked)}</span>
+                                <span class="comment-like-count">${commentLikes}</span>
+                            </button>
+                            <button class="comment-reply-btn" onclick="toggleCommentReplyInput(${messageId}, ${reply.id}, event)" title="Reply to this comment" aria-label="Reply to comment">
+                                <span>↩</span>
+                                <span>${nestedCount}</span>
+                            </button>
+                        </div>
+                        <div id="comment-reply-box-${messageId}-${reply.id}" class="comment-reply-input-container" style="display: none;">
+                            <input type="text" id="comment-reply-input-${messageId}-${reply.id}" class="comment-reply-input" placeholder="Reply to this comment..." autocomplete="off" onkeypress="if(event.key === 'Enter') submitCommentReply(${messageId}, ${reply.id})">
+                            <button class="comment-reply-send-btn" onclick="submitCommentReply(${messageId}, ${reply.id})" title="Send reply">➤</button>
+                        </div>
+                        ${nestedReplies.length > 0 ? `<div class="nested-replies">${renderReplyItems(nestedReplies, messageId, depth + 1)}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
         // Display messages as cards
         function displayMessages(messages) {
             const messagesList = document.getElementById('messagesList');
@@ -1200,29 +1278,19 @@
                 
                 const isLiked = likedMessages.includes(msg.id);
                 const likesCount = msg.likes || 0;
-                const repliesCount = msg.replies ? msg.replies.length : 0;
+                const repliesCount = countTotalReplies(msg.replies || []);
                 const expiresBadgeText = msg.expiresAt ? formatExpiresIn(msg.expiresAt) : '';
                 
                 const username = msg.username || 'Anonymous';
                 const avatar = msg.avatar || '👤';
 
-                const repliesList = (msg.replies || []).map(r => `
-                    <div class="reply-item">
-                        <div class="reply-header">
-                            <span class="reply-avatar">${r.avatar || '👤'}</span>
-                            <span class="reply-author">${withAt(r.username || 'Anonymous')}</span>
-                            <span class="reply-time">• ${getTimeAgo(new Date(r.timestamp))}</span>
-                        </div>
-                        <div class="reply-content">${escapeHtml(r.text)}</div>
-                    </div>
-                `).join('');
-
                 const hasReplies = (msg.replies || []).length > 0;
+                const repliesList = renderReplyItems(msg.replies || [], msg.id);
 
                 const inlineRepliesHtml = `
-                    <div id="replies-${msg.id}" class="replies-wrapper">
+                    <div id="replies-${msg.id}" class="replies-wrapper ${hasReplies ? 'expanded' : ''}" style="display: ${hasReplies ? 'block' : 'none'};">
                         <div class="replies-title-row">
-                            <span class="replies-title">Replies</span>
+                            <span class="replies-title">Comments</span>
                             <span class="replies-count">${repliesCount}</span>
                         </div>
                         <div class="replies-list">${hasReplies ? repliesList : '<div class="replies-empty">No replies yet. Start the conversation.</div>'}</div>
@@ -1268,6 +1336,10 @@
                     </div>
                     ${inlineRepliesHtml}
                 `;
+
+                if (hasReplies) {
+                    card.classList.add('expanded-card');
+                }
                 
                 fragment.appendChild(card);
             });
@@ -1439,6 +1511,20 @@
 
             if (!repliesDiv) return;
 
+            const hasExistingComments = repliesDiv.querySelector('.reply-item');
+
+            if (hasExistingComments) {
+                repliesDiv.style.display = 'block';
+                repliesDiv.classList.add('expanded');
+                if (card) card.classList.add('expanded-card');
+
+                const input = document.getElementById(`reply-input-${messageId}`);
+                if (input) {
+                    setTimeout(() => input.focus(), 120);
+                }
+                return;
+            }
+
             if (repliesDiv.classList.contains('expanded')) {
                 repliesDiv.classList.remove('expanded');
                 if (card) card.classList.remove('expanded-card');
@@ -1509,6 +1595,88 @@
             } catch (error) {
                 console.error('Error posting reply:', error);
                 alert('Error posting reply');
+            }
+        }
+
+        function findReplyByIdClient(replyList, replyId) {
+            if (!Array.isArray(replyList)) {
+                return null;
+            }
+
+            for (const reply of replyList) {
+                if (reply.id === replyId) {
+                    return reply;
+                }
+
+                const nested = findReplyByIdClient(reply.replies, replyId);
+                if (nested) {
+                    return nested;
+                }
+            }
+
+            return null;
+        }
+
+        function toggleCommentReplyInput(messageId, replyId, event) {
+            if (event) event.stopPropagation();
+
+            const box = document.getElementById(`comment-reply-box-${messageId}-${replyId}`);
+            const input = document.getElementById(`comment-reply-input-${messageId}-${replyId}`);
+            if (!box) return;
+
+            const willShow = box.style.display === 'none' || box.style.display === '';
+            box.style.display = willShow ? 'flex' : 'none';
+            if (willShow && input) {
+                setTimeout(() => input.focus(), 80);
+            }
+        }
+
+        async function submitCommentReply(messageId, replyId) {
+            const input = document.getElementById(`comment-reply-input-${messageId}-${replyId}`);
+            if (!input) return;
+
+            const text = input.value.trim();
+            if (!text) {
+                input.focus();
+                return;
+            }
+
+            const profile = getUserProfile();
+
+            try {
+                const response = await fetch(`/api/messages/${messageId}/replies/${replyId}/reply`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text,
+                        username: profile.username,
+                        avatar: profile.avatar
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    alert(error.error || 'Failed to post comment reply');
+                    return;
+                }
+
+                const newNestedReply = await response.json();
+                const targetMessage = allMessages.find(m => m.id === messageId);
+                if (targetMessage) {
+                    const parentReply = findReplyByIdClient(targetMessage.replies, replyId);
+                    if (parentReply) {
+                        if (!Array.isArray(parentReply.replies)) {
+                            parentReply.replies = [];
+                        }
+                        parentReply.replies.push(newNestedReply);
+                    }
+                }
+
+                input.value = '';
+                displayMessages(allMessages);
+            } catch (error) {
+                console.error('Error posting comment reply:', error);
+                alert('Error posting comment reply');
             }
         }
 
@@ -1681,6 +1849,7 @@
 
         // Like/Unlike functionality
         let likedMessages = JSON.parse(localStorage.getItem('likedMessages') || '[]');
+        let likedComments = JSON.parse(localStorage.getItem('likedComments') || '[]');
 
         async function toggleLike(messageId, event) {
             event.stopPropagation();
@@ -1757,6 +1926,81 @@
             } finally {
                 likeRequestsInFlight.delete(messageId);
                 likeBtn.classList.remove('liking');
+            }
+        }
+
+        async function toggleCommentLike(messageId, replyId, event) {
+            if (event) event.stopPropagation();
+
+            const requestKey = `${messageId}:${replyId}`;
+            if (commentLikeRequestsInFlight.has(requestKey)) {
+                return;
+            }
+
+            const likeBtn = event.target.closest('.comment-like-btn');
+            if (!likeBtn) {
+                return;
+            }
+
+            const isLiked = isCommentLiked(messageId, replyId);
+            const nextLikedState = !isLiked;
+            const countSpan = likeBtn.querySelector('.comment-like-count');
+            const heartSpan = likeBtn.querySelector('.comment-heart-icon');
+            const currentCount = Number.parseInt(countSpan?.textContent || '0', 10) || 0;
+            const optimisticCount = Math.max(0, currentCount + (nextLikedState ? 1 : -1));
+            const key = getCommentLikeKey(messageId, replyId);
+
+            commentLikeRequestsInFlight.add(requestKey);
+
+            if (nextLikedState) {
+                likedComments.push(key);
+            } else {
+                likedComments = likedComments.filter(item => item !== key);
+            }
+            localStorage.setItem('likedComments', JSON.stringify(likedComments));
+
+            likeBtn.classList.toggle('liked', nextLikedState);
+            if (countSpan) countSpan.textContent = optimisticCount;
+            if (heartSpan) heartSpan.textContent = getCommentHeartIcon(nextLikedState);
+
+            const targetMessage = allMessages.find(m => m.id === messageId);
+            const targetReply = targetMessage ? findReplyByIdClient(targetMessage.replies, replyId) : null;
+            if (targetReply) {
+                targetReply.likes = optimisticCount;
+            }
+
+            try {
+                const endpoint = isLiked ? 'unlike' : 'like';
+                const response = await fetch(`/api/messages/${messageId}/replies/${replyId}/${endpoint}`, {
+                    method: 'POST'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Comment like request failed');
+                }
+
+                const data = await response.json();
+                if (countSpan) countSpan.textContent = data.likes;
+                if (targetReply) targetReply.likes = data.likes;
+                if (heartSpan) heartSpan.textContent = getCommentHeartIcon(nextLikedState);
+            } catch (error) {
+                console.error('Error toggling comment like:', error);
+
+                if (isLiked) {
+                    likedComments.push(key);
+                } else {
+                    likedComments = likedComments.filter(item => item !== key);
+                }
+                localStorage.setItem('likedComments', JSON.stringify(likedComments));
+
+                likeBtn.classList.toggle('liked', isLiked);
+                if (countSpan) countSpan.textContent = currentCount;
+                if (heartSpan) heartSpan.textContent = getCommentHeartIcon(isLiked);
+                if (targetReply) targetReply.likes = currentCount;
+
+                showToast('Failed to update comment like. Please try again.', 'error');
+            } finally {
+                commentLikeRequestsInFlight.delete(requestKey);
             }
         }
 

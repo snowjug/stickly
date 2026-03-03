@@ -1,16 +1,36 @@
 {
   "messages": [
     {
-      "id": 1772550102966,
-      "text": "compat smoke",
+      "id": 1772552169568,
+      "text": "Smoke test post",
       "category": "thoughts",
-      "timestamp": "2026-03-03T15:01:42.966Z",
+      "timestamp": "2026-03-03T15:36:09.568Z",
       "image": null,
       "likes": 0,
-      "username": "SmokeBot",
-      "avatar": "👤",
-      "expiresAt": "2026-03-03T15:02:42.966Z",
-      "replies": []
+      "username": "Tester",
+      "avatar": "??",
+      "expiresAt": "2026-03-04T15:36:09.568Z",
+      "replies": [
+        {
+          "id": 1772552169595,
+          "text": "First comment",
+          "username": "Commenter",
+          "avatar": "??",
+          "timestamp": "2026-03-03T15:36:09.595Z",
+          "likes": 2,
+          "replies": [
+            {
+              "id": 1772552169601,
+              "text": "Replying to comment",
+              "username": "Nested",
+              "avatar": "??",
+              "timestamp": "2026-03-03T15:36:09.601Z",
+              "likes": 1,
+              "replies": []
+            }
+          ]
+        }
+      ]
     }
   ],
   "messageLikes": {},

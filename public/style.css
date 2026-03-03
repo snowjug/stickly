@@ -2082,6 +2082,118 @@ body,
     font-size: 0.92rem;
 }
 
+.comment-actions-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.45rem;
+}
+
+.comment-like-btn,
+.comment-reply-btn {
+    border: 1px solid var(--border-color);
+    background: var(--card-background);
+    color: var(--subtle-text-color);
+    border-radius: 999px;
+    padding: 0.2rem 0.5rem;
+    min-height: 26px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+
+.comment-like-btn:hover,
+.comment-reply-btn:hover {
+    transform: translateY(-1px);
+    border-color: var(--accent-color);
+    color: var(--text-color);
+}
+
+.comment-like-btn:active,
+.comment-reply-btn:active {
+    transform: scale(0.96);
+}
+
+.comment-like-btn.liked {
+    border-color: #ff6b6b;
+    color: #ff4d6d;
+    background: rgba(255, 107, 107, 0.08);
+}
+
+.comment-heart-icon {
+    font-size: 0.85rem;
+    line-height: 1;
+}
+
+.comment-like-count {
+    min-width: 1ch;
+    text-align: center;
+}
+
+.nested-replies {
+    margin-top: 0.55rem;
+    margin-left: 0.6rem;
+    padding-left: 0.55rem;
+    border-left: 1px dashed rgba(0, 113, 227, 0.2);
+}
+
+.reply-item[data-depth="1"],
+.reply-item[data-depth="2"],
+.reply-item[data-depth="3"] {
+    background: linear-gradient(180deg, rgba(0, 113, 227, 0.03), transparent);
+}
+
+.comment-reply-input-container {
+    display: none;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+    padding: 0.35rem;
+    border: 1px solid rgba(0, 113, 227, 0.16);
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(0, 113, 227, 0.05), rgba(0, 113, 227, 0.02));
+}
+
+.comment-reply-input {
+    width: 100%;
+    border: 1px solid transparent;
+    background: var(--card-background);
+    color: var(--text-color);
+    border-radius: 10px;
+    padding: 0.48rem 0.68rem;
+    font-size: 0.84rem;
+}
+
+.comment-reply-input:focus {
+    outline: none;
+    border-color: rgba(0, 113, 227, 0.45);
+    box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.12);
+}
+
+.comment-reply-send-btn {
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-color), var(--accent-color-hover));
+    color: #fff;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-size: 0.8rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.comment-reply-send-btn:hover {
+    filter: brightness(1.06);
+}
+
 .reply-input-container {
     display: flex;
     gap: 0.55rem;
