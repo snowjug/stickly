@@ -1614,20 +1614,6 @@
 
             if (!repliesDiv) return;
 
-            const hasExistingComments = repliesDiv.querySelector('.reply-item');
-
-            if (hasExistingComments) {
-                repliesDiv.style.display = 'block';
-                repliesDiv.classList.add('expanded');
-                if (card) card.classList.add('expanded-card');
-
-                const input = document.getElementById(`reply-input-${messageId}`);
-                if (input) {
-                    setTimeout(() => input.focus(), 120);
-                }
-                return;
-            }
-
             if (repliesDiv.classList.contains('expanded')) {
                 repliesDiv.classList.remove('expanded');
                 if (card) card.classList.remove('expanded-card');
