@@ -338,6 +338,7 @@
         let adminSessionId = localStorage.getItem('adminSessionId') || null;
         let autoRefreshIntervalId = null;
         let isLoadingMessages = false;
+        let isPostingMessage = false;
         let lastMessagesSignature = '';
         const likeRequestsInFlight = new Set();
         const commentLikeRequestsInFlight = new Set();
@@ -931,7 +932,7 @@
                 const postModalOpen = document.getElementById('postModal')?.classList.contains('show');
                 const reportModalOpen = document.getElementById('reportModal')?.classList.contains('show');
                 const adminModalOpen = document.getElementById('adminModal')?.classList.contains('show');
-                if (postModalOpen || reportModalOpen || adminModalOpen || isReplyInteractionActive() || isMediaInteractionActive()) return;
+                if (isPostingMessage || postModalOpen || reportModalOpen || adminModalOpen || isReplyInteractionActive() || isMediaInteractionActive()) return;
 
                 loadMessages(false);
             }, 8000);
@@ -1314,8 +1315,14 @@
                 const url = (currentSection === 'all' || currentSection === 'trending')
                     ? '/api/messages'
                     : `/api/messages?category=${currentSection}`;
+                const requestUrl = `${url}${url.includes('?') ? '&' : '?'}_=${Date.now()}`;
                 
-                const response = await fetch(url);
+                const response = await fetch(requestUrl, {
+                    cache: 'no-store',
+                    headers: {
+                        'Cache-Control': 'no-cache'
+                    }
+                });
                 let messages = await response.json();
 
                 if (currentSection === 'trending') {
@@ -1373,6 +1380,7 @@
             if (postBtn.disabled) return;
             
             // Disable button and show loading state
+            isPostingMessage = true;
             postBtn.disabled = true;
             const originalText = postBtn.textContent;
             postBtn.textContent = 'Posting...';
@@ -1485,6 +1493,7 @@
                 alert('Error posting message. Please try again.');
             } finally {
                 // Reset button state
+                isPostingMessage = false;
                 postBtn.disabled = false;
                 postBtn.textContent = originalText;
                 postBtn.style.opacity = '1';

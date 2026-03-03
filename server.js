@@ -75,7 +75,7 @@ async function upsertMessageToSupabase(messagePayload, reports = []) {
         .upsert(row, { onConflict: 'message_id' });
 
     if (error) {
-        console.error('Supabase message sync failed:', error.message);
+        throw new Error(error.message || 'Supabase message sync failed');
     }
 }
 
@@ -263,6 +263,18 @@ async function hydrateMessagesFromSupabase() {
     } finally {
         hydrateMessagesPromise = null;
     }
+}
+
+async function findMessageById(messageId, options = {}) {
+    const { hydrateOnMiss = false } = options;
+    let message = messages.find(msg => msg.id === messageId);
+
+    if (!message && hydrateOnMiss) {
+        await hydrateMessagesFromSupabase();
+        message = messages.find(msg => msg.id === messageId);
+    }
+
+    return message;
 }
 
 // Admin credentials (in production, use environment variables and hashed passwords)
@@ -483,15 +495,7 @@ app.get('/', (req, res) => {
 // Get all messages or filter by category
 app.get('/api/messages', async (req, res) => {
     purgeExpiredMessages();
-    const shouldWaitForHydration = messages.length === 0;
-    const hydrationTask = hydrateMessagesFromSupabase();
-    if (shouldWaitForHydration) {
-        await hydrationTask;
-    } else {
-        hydrationTask.catch(error => {
-            console.error('Supabase background hydrate failed:', error.message);
-        });
-    }
+    await hydrateMessagesFromSupabase();
 
     const { category } = req.query;
     
@@ -715,9 +719,16 @@ app.post('/api/messages', upload.single('mediaFile'), async (req, res) => {
     lastSupabaseHydrationAt = Date.now();
     savePersistedState();
 
-    upsertMessageToSupabase(newMessage).catch(error => {
+    try {
+        await upsertMessageToSupabase(newMessage);
+    } catch (error) {
         console.error('Supabase message sync failed:', error.message);
-    });
+        messages = messages.filter(msg => msg.id !== newMessage.id);
+        delete messageLikes[newMessage.id];
+        delete messageReports[newMessage.id];
+        savePersistedState();
+        return res.status(503).json({ error: 'Unable to save post right now. Please try again.' });
+    }
 
     res.status(201).json({ success: true, id: newMessage.id, timestamp: newMessage.timestamp });
 });
@@ -807,11 +818,10 @@ app.post('/api/messages/:id/unlike', async (req, res) => {
 // Reply to a message
 app.post('/api/messages/:id/reply', async (req, res) => {
     purgeExpiredMessages();
-    await hydrateMessagesFromSupabase();
 
     const messageId = parseInt(req.params.id);
     const { text, username, avatar, authorSessionId } = req.body;
-    const message = messages.find(msg => msg.id === messageId);
+    const message = await findMessageById(messageId, { hydrateOnMiss: true });
 
     if (!message) {
         return res.status(404).json({ error: 'Message not found' });
@@ -839,7 +849,9 @@ app.post('/api/messages/:id/reply', async (req, res) => {
     message.replies.push(reply);
     savePersistedState();
 
-    await syncMessageStateToSupabase(messageId);
+    syncMessageStateToSupabase(messageId).catch(error => {
+        console.error('Supabase reply sync failed:', error.message);
+    });
 
     res.status(201).json(reply);
 });
@@ -910,12 +922,11 @@ app.post('/api/messages/:id/replies/:replyId/unlike', async (req, res) => {
 // Reply to an existing comment/reply
 app.post('/api/messages/:id/replies/:replyId/reply', async (req, res) => {
     purgeExpiredMessages();
-    await hydrateMessagesFromSupabase();
 
     const messageId = parseInt(req.params.id);
     const replyId = parseInt(req.params.replyId);
     const { text, username, avatar, authorSessionId } = req.body;
-    const message = messages.find(msg => msg.id === messageId);
+    const message = await findMessageById(messageId, { hydrateOnMiss: true });
 
     if (!message) {
         return res.status(404).json({ error: 'Message not found' });
@@ -948,7 +959,9 @@ app.post('/api/messages/:id/replies/:replyId/reply', async (req, res) => {
     parentReply.replies.push(nestedReply);
     savePersistedState();
 
-    await syncMessageStateToSupabase(messageId);
+    syncMessageStateToSupabase(messageId).catch(error => {
+        console.error('Supabase nested reply sync failed:', error.message);
+    });
 
     res.status(201).json(nestedReply);
 });
