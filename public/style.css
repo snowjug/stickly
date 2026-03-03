@@ -1668,23 +1668,6 @@ body.dark-mode .message-avatar {
     box-shadow: 0 2px 8px rgba(0, 113, 227, 0.3);
 }
 
-.media-type-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.18rem 0.5rem;
-    border-radius: 999px;
-    border: 1px solid rgba(0, 113, 227, 0.22);
-    background: rgba(0, 113, 227, 0.08);
-    color: var(--accent-color);
-    font-size: 0.73rem;
-    font-weight: 700;
-    letter-spacing: 0.01em;
-    line-height: 1;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
 .message-time {
     display: inline-flex;
     align-items: center;
@@ -3308,11 +3291,11 @@ body,
 .message-card .message-meta-row {
     display: flex;
     align-items: center;
-    gap: 0.42rem;
+    gap: 0.32rem;
     flex-wrap: nowrap;
     min-width: 0;
-    padding-right: 0.6rem;
-    max-width: calc(100% - 0.6rem);
+    padding-right: 0.35rem;
+    max-width: calc(100% - 0.35rem);
 }
 
 .message-card .message-user-meta {
@@ -3373,13 +3356,13 @@ body,
 }
 
 .message-card[data-category="whistleblower"] .message-meta-row {
-    padding-right: 0.8rem;
-    max-width: calc(100% - 0.8rem);
+    padding-right: 0.45rem;
+    max-width: calc(100% - 0.45rem);
 }
 
 .message-card[data-category="controversy"] .message-meta-row {
-    padding-right: 0.95rem;
-    max-width: calc(100% - 0.95rem);
+    padding-right: 0.5rem;
+    max-width: calc(100% - 0.5rem);
 }
 
 .message-card .delete-btn {

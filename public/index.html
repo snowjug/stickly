@@ -911,6 +911,14 @@
             return hasMainReplyDraft || hasCommentReplyDraft;
         }
 
+        function isMediaInteractionActive() {
+            if (mediaHoverTimers.size > 0) {
+                return true;
+            }
+
+            return Array.from(document.querySelectorAll('.message-video')).some(video => !video.paused);
+        }
+
         function startAutoRefresh() {
             if (autoRefreshIntervalId) {
                 clearInterval(autoRefreshIntervalId);
@@ -922,7 +930,7 @@
                 const postModalOpen = document.getElementById('postModal')?.classList.contains('show');
                 const reportModalOpen = document.getElementById('reportModal')?.classList.contains('show');
                 const adminModalOpen = document.getElementById('adminModal')?.classList.contains('show');
-                if (postModalOpen || reportModalOpen || adminModalOpen || isReplyInteractionActive()) return;
+                if (postModalOpen || reportModalOpen || adminModalOpen || isReplyInteractionActive() || isMediaInteractionActive()) return;
 
                 loadMessages(false);
             }, 8000);
@@ -1273,6 +1281,15 @@
                     messages = messages
                         .slice()
                         .sort((a, b) => (b.likes || 0) - (a.likes || 0));
+                }
+
+                const previousSignature = JSON.stringify(allMessages || []);
+                const nextSignature = JSON.stringify(messages || []);
+                const hasDataChanged = previousSignature !== nextSignature;
+
+                if (!showSkeleton && !hasDataChanged) {
+                    updateMessageCounts();
+                    return;
                 }
 
                 allMessages = messages; // Store for filtering
@@ -1642,22 +1659,6 @@
             `;
         }
 
-        function getMessageMediaTypeLabel(msg) {
-            if (!msg || !msg.image) {
-                return null;
-            }
-
-            if (isYouTubeMedia(msg.image)) {
-                return '📺 YouTube';
-            }
-
-            if (isVideoMedia(msg.image)) {
-                return '▶ Video';
-            }
-
-            return '🖼 Image';
-        }
-
         function renderReplyItems(replyList, messageId, depth = 0) {
             if (!Array.isArray(replyList) || replyList.length === 0) {
                 return '';
@@ -1783,7 +1784,6 @@
 
                 const hasReplies = (msg.replies || []).length > 0;
                 const repliesList = renderReplyItems(msg.replies || [], msg.id);
-                const mediaTypeLabel = getMessageMediaTypeLabel(msg);
 
                 const inlineRepliesHtml = `
                     <div id="replies-${msg.id}" class="replies-wrapper ${hasReplies ? 'expanded' : ''}" style="display: ${hasReplies ? 'block' : 'none'};">
@@ -1809,7 +1809,6 @@
                                 <span class="message-username">${withAt(username)}</span>
                                 <div class="message-meta-row">
                                     <span class="category-badge"><span class="badge-emoji">${categoryEmojis[msg.category]}</span><span class="badge-text">${msg.category}</span></span>
-                                    ${mediaTypeLabel ? `<span class="media-type-badge">${mediaTypeLabel}</span>` : ''}
                                     <span class="message-time">${timeAgo}</span>
                                     ${msg.expiresAt ? `<span class="expires-badge" data-expires-at="${msg.expiresAt}">${expiresBadgeText}</span>` : ''}
                                 </div>
