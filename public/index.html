@@ -326,6 +326,10 @@
             return generated;
         }
 
+        function hasAdminSession() {
+            return !!(adminSessionId || localStorage.getItem('adminSessionId'));
+        }
+
         function getCommentDeleteKey(messageId, replyId) {
             return `${messageId}:${replyId}`;
         }
@@ -1266,6 +1270,7 @@
             }
 
             const authorSessionId = getCommentAuthorSessionId();
+            const adminMode = hasAdminSession();
 
             return replyList.map(reply => {
                 const deleteKey = getCommentDeleteKey(messageId, reply.id);
@@ -1277,6 +1282,7 @@
                 const isOwnedByCurrentSession =
                     typeof reply.authorSessionId === 'string' &&
                     reply.authorSessionId === authorSessionId;
+                const canDeleteComment = isOwnedByCurrentSession || adminMode;
 
                 if (pendingDelete) {
                     return `
@@ -1306,7 +1312,7 @@
                                 <span>↩</span>
                                 <span>${nestedCount}</span>
                             </button>
-                            ${isOwnedByCurrentSession ? `<button class="comment-delete-btn" onclick="deleteComment(${messageId}, ${reply.id}, event)" title="Delete your comment" aria-label="Delete your comment">×</button>` : ''}
+                            ${canDeleteComment ? `<button class="comment-delete-btn" onclick="deleteComment(${messageId}, ${reply.id}, event)" title="Delete comment" aria-label="Delete comment">×</button>` : ''}
                         </div>
                         <div id="comment-reply-box-${messageId}-${reply.id}" class="comment-reply-input-container" style="display: none;">
                             <input type="text" id="comment-reply-input-${messageId}-${reply.id}" class="comment-reply-input" placeholder="Reply to this comment..." autocomplete="off" onkeypress="if(event.key === 'Enter') submitCommentReply(${messageId}, ${reply.id})">
@@ -1812,7 +1818,7 @@
                 return;
             }
 
-            if (!confirm('Delete your comment?')) {
+            if (!confirm('Delete this comment?')) {
                 return;
             }
 
